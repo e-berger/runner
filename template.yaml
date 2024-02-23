@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  runner
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 128
+
+Resources:
+  CloudWatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: AggregatedLabelsLogGroup
+      RetentionInDays: 30
+  Runner:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      PackageType: Zip
+      CodeUri: .
+      Handler: bootstrap
+      Runtime: go1.x
+      Architectures:
+      - x86_64
+      Events:
+        CallbackCMI:
+          Type: Api
+          Properties:
+            Path: /runner
+            Method: post
+      LoggingConfig:
+        LogFormat: JSON
+        ApplicationLogLevel: INFO
+        SystemLogLevel: INFO
+        LogGroup: !Ref CloudWatchLogGroup
+      Environment:
+        Variables:
+          TURSO_TOKEN: "empty"
+          TURSO_DATABASE: "empty"
+Outputs:
+  Runner:
+    Description: First Lambda Function ARN
+    Value: !GetAtt Runner.Arn
+  RunnerFunctionIamRole:
+    Description: Implicit IAM Role created for runner function
+    Value: !GetAtt Runner.Arn
