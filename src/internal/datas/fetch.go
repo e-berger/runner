@@ -26,7 +26,7 @@ func Fetch(limit int, offset int, database string, authToken string) ([]monitor.
 	statements := map[string]interface{}{
 		"statements": []map[string]interface{}{
 			{
-				"q": "SELECT * FROM monitoring LIMIT :limit OFFSET :offset",
+				"q": "SELECT * FROM probes LIMIT :limit OFFSET :offset",
 				"params": map[string]interface{}{
 					":limit":  limit,
 					":offset": offset,
