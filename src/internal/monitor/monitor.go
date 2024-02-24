@@ -13,14 +13,9 @@ type IMonitor interface {
 }
 
 type Monitor struct {
-	id     int
-	method monitoring.MethodType
-}
-
-type InfosMonitor struct {
-	Id   int    `json:"id"`
-	Type int    `json:"type"`
-	Data string `json:"data"`
+	id       int
+	method   monitoring.MethodType
+	location monitoring.LocationType
 }
 
 func (t *Monitor) GetMethod() monitoring.MethodType {
@@ -35,7 +30,7 @@ func (t *Monitor) String() string {
 	return fmt.Sprintf("monitor %d", t.id)
 }
 
-func GetMonitoring(m InfosMonitor) (IMonitor, error) {
+func GetMonitoring(m *InfosMonitor) (IMonitor, error) {
 	switch {
 	case m.Type == monitoring.HTTP:
 		return newHttpTest(m)

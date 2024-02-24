@@ -5,7 +5,8 @@ import "fmt"
 type MethodType uint
 
 const (
-	PING = iota
+	UNKNOWNMETHOD = iota
+	PING
 	HTTP
 	HEAD
 	TCP
@@ -14,44 +15,54 @@ const (
 	SSH
 )
 
-var methodTypeStrings = []string{
-	"ping",
-	"http",
-	"head",
-	"tcp",
-	"dns",
-	"smtp",
-	"ssh",
-}
+const (
+	PINGMethodString = "ping"
+	HTTPMethodString = "http"
+	HEADMethodString = "head"
+	TCPMethodString  = "tcp"
+	DNSMethodString  = "dns"
+	SMTPMethodString = "smtp"
+	SSHMethodString  = "ssh"
+)
 
-func (mt MethodType) name() string {
-	return methodTypeStrings[mt]
-}
-
-func (mt MethodType) ordinal() int {
-	return int(mt)
-}
-
-func (mt MethodType) values() *[]string {
-	return &methodTypeStrings
-}
-
-func ValueOf(name string) (MethodType, error) {
-	for i, n := range methodTypeStrings {
-		if n == name {
-			return MethodType(i), nil
-		}
+func (m MethodType) String() string {
+	switch m {
+	case PING:
+		return PINGMethodString
+	case HTTP:
+		return HTTPMethodString
+	case HEAD:
+		return HEADMethodString
+	case TCP:
+		return TCPMethodString
+	case DNS:
+		return DNSMethodString
+	case SMTP:
+		return SMTPMethodString
+	case SSH:
+		return SSHMethodString
+	default:
+		panic("unhandled default case")
 	}
-	return 0, fmt.Errorf("MethodType %s not found", name)
 }
 
-func GetMethodType(i int) (MethodType, error) {
-	if i < 0 || i >= len(methodTypeStrings) {
-		return 0, fmt.Errorf("MethodType %d not found", i)
+// ParseLocation parses a method string into a MethodType
+func ParseMethod(method string) (MethodType, error) {
+	switch method {
+	case PINGMethodString:
+		return PING, nil
+	case HTTPMethodString:
+		return HTTP, nil
+	case HEADMethodString:
+		return HEAD, nil
+	case TCPMethodString:
+		return TCP, nil
+	case DNSMethodString:
+		return DNS, nil
+	case SMTPMethodString:
+		return SMTP, nil
+	case SSHMethodString:
+		return SMTP, nil
 	}
-	return MethodType(i), nil
-}
-
-func (mt MethodType) String() string {
-	return methodTypeStrings[mt]
+	return UNKNOWNMETHOD, fmt.Errorf("unknown method: %s", method)
 }

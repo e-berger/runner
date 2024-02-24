@@ -20,7 +20,7 @@ type httpTestData struct {
 	Url        string `json:"url"`
 }
 
-func newHttpTest(m InfosMonitor) (IMonitor, error) {
+func newHttpTest(m *InfosMonitor) (IMonitor, error) {
 	var d httpTestData
 	err := json.Unmarshal([]byte(m.Data), &d)
 	if err != nil {
@@ -30,8 +30,9 @@ func newHttpTest(m InfosMonitor) (IMonitor, error) {
 
 	h := &httpTest{
 		Monitor: Monitor{
-			id:     m.Id,
-			method: monitoring.HTTP,
+			id:       m.Id,
+			method:   monitoring.HTTP,
+			location: monitoring.LocationType(m.Location),
 		},
 		httpTestData: httpTestData{
 			HttpMethod: d.HttpMethod,
@@ -48,14 +49,18 @@ func (t *httpTest) GetMethod() monitoring.MethodType {
 
 func (t *httpTest) Launch() error {
 	time_start := time.Now()
-	resp, err := http.Get(t.Url)
-	if resp != nil {
-		defer resp.Body.Close()
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse },
 	}
+	req, err := http.NewRequest(t.HttpMethod, t.Url, nil)
 	if err != nil {
-		slog.Error("Error on http ping", "error", err, "httptest", t)
 		return err
 	}
+	_, err = client.Do(req)
+	if err != nil {
+		return err
+	}
+
 	fmt.Println(time.Since(time_start), t.Url)
 	return nil
 }

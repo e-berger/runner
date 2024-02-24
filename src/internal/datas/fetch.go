@@ -22,11 +22,11 @@ type Results struct {
 	Rows    [][]interface{} `json:"rows"`
 }
 
-func Fetch(limit int, offset int, database string, authToken string) ([]monitor.InfosMonitor, error) {
+func Fetch(limit int, offset int, database string, authToken string) ([]*monitor.InfosMonitor, error) {
 	statements := map[string]interface{}{
 		"statements": []map[string]interface{}{
 			{
-				"q": "SELECT * FROM probes LIMIT :limit OFFSET :offset",
+				"q": "SELECT id, type, data, location FROM probes LIMIT :limit OFFSET :offset",
 				"params": map[string]interface{}{
 					":limit":  limit,
 					":offset": offset,
@@ -41,7 +41,38 @@ func Fetch(limit int, offset int, database string, authToken string) ([]monitor.
 	}
 
 	time_start := time.Now()
+	responseBody, err := httpQueryDb(database, authToken, jsonData)
+	if err != nil {
+		return nil, err
+	}
+	slog.Debug("Response", "query time", time.Since(time_start).String())
 
+	var resultData []Response
+	err = json.Unmarshal(responseBody, &resultData)
+	if err != nil {
+		return nil, err
+	}
+
+	resultDataFlatten, _ := parseData(resultData)
+	slog.Debug("Response", "query result", resultDataFlatten)
+	return resultDataFlatten, nil
+}
+
+func parseData(resultData []Response) ([]*monitor.InfosMonitor, error) {
+	var resultDataFlatten []*monitor.InfosMonitor
+	for _, result := range resultData {
+		for l := range result.Results.Rows {
+			infosMonitor, err := monitor.NewInfosMonitor(result.Results.Columns, result.Results.Rows[l])
+			if err != nil {
+				return nil, err
+			}
+			resultDataFlatten = append(resultDataFlatten, infosMonitor)
+		}
+	}
+	return resultDataFlatten, nil
+}
+
+func httpQueryDb(database string, authToken string, jsonData []byte) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodPost, database, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
@@ -60,7 +91,6 @@ func Fetch(limit int, offset int, database string, authToken string) ([]monitor.
 		return nil, err
 	}
 	slog.Debug("Response", "status", resp.Status)
-	slog.Debug("Response", "query time", time.Since(time_start).String())
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("error: status code %d", resp.StatusCode)
@@ -70,26 +100,5 @@ func Fetch(limit int, offset int, database string, authToken string) ([]monitor.
 	if err != nil {
 		return nil, err
 	}
-
-	var resultData []Response
-	var resultDataFlatten []monitor.InfosMonitor
-
-	err = json.Unmarshal(responseBody, &resultData)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, result := range resultData {
-		for _, row := range result.Results.Rows {
-			//to do : refactor this
-			var rowData monitor.InfosMonitor
-			rowData.Id = int(row[0].(float64))
-			rowData.Type = int(row[1].(float64))
-			rowData.Data = row[2].(string)
-			resultDataFlatten = append(resultDataFlatten, rowData)
-		}
-	}
-
-	slog.Debug("Response", "query result", resultDataFlatten)
-	return resultDataFlatten, nil
+	return responseBody, nil
 }

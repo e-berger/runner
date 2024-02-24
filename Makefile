@@ -5,4 +5,4 @@ sam-local:
 
 build-Runner:
 	goreleaser release --snapshot --clean
-	cp ./dist/runner_linux_amd64_v1/bootstrap $(ARTIFACTS_DIR)/.
+	cp ./dist/sheepdog-runner_linux_amd64_v1/bootstrap $(ARTIFACTS_DIR)/.

@@ -10,11 +10,12 @@ type pingTest struct {
 	Monitor
 }
 
-func newPingTest(m InfosMonitor) (IMonitor, error) {
+func newPingTest(m *InfosMonitor) (IMonitor, error) {
 	return &pingTest{
 		Monitor: Monitor{
-			id:     m.Id,
-			method: monitoring.PING,
+			id:       m.Id,
+			method:   monitoring.PING,
+			location: monitoring.LocationType(m.Location),
 		},
 	}, nil
 }
