@@ -38,8 +38,9 @@ Resources:
         LogGroup: !Ref CloudWatchLogGroup
       Environment:
         Variables:
-          TURSO_TOKEN: "empty"
-          TURSO_DATABASE: "empty"
+          TURSO_TOKEN: ""
+          TURSO_DATABASE: ""
+          PUSHGATEWAY: ""
 Outputs:
   Runner:
     Description: First Lambda Function ARN

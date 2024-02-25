@@ -1,8 +1,8 @@
-package monitoring
+package domain
 
 import "fmt"
 
-type MethodType uint
+type ProbeType uint
 
 const (
 	UNKNOWNMETHOD = iota
@@ -25,7 +25,7 @@ const (
 	SSHMethodString  = "ssh"
 )
 
-func (m MethodType) String() string {
+func (m ProbeType) String() string {
 	switch m {
 	case PING:
 		return PINGMethodString
@@ -46,8 +46,8 @@ func (m MethodType) String() string {
 	}
 }
 
-// ParseLocation parses a method string into a MethodType
-func ParseMethod(method string) (MethodType, error) {
+// ParseLocation parses a method string into a ProbeType
+func ParseMethod(method string) (ProbeType, error) {
 	switch method {
 	case PINGMethodString:
 		return PING, nil

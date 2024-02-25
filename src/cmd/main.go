@@ -8,23 +8,32 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"sync"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/e-berger/sheepdog-runner/src/internal/datas"
-	"github.com/e-berger/sheepdog-runner/src/internal/monitor"
+	"github.com/e-berger/sheepdog-runner/src/internal/controller"
 )
 
-var primaryUrl string
-var authToken string
+var c *controller.Controller
 
 func init() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 	database := os.Getenv("TURSO_DATABASE")
-	authToken = os.Getenv("TURSO_TOKEN")
-	primaryUrl = fmt.Sprintf("https://%s.turso.io", database)
+	if database == "" {
+		slog.Error("TURSO_DATABASE not set")
+		panic("TURSO_DATABASE not set")
+	}
+	authToken := os.Getenv("TURSO_TOKEN")
+	if authToken == "" {
+		slog.Error("TURSO_TOKEN not set")
+		panic("TURSO_TOKEN not set")
+	}
+	pushgateway := os.Getenv("PUSHGATEWAY")
+	if pushgateway == "" {
+		slog.Info("PUSHGATEWAY not set, metrics will not be pushed")
+	}
+	c = controller.NewController(database, pushgateway, authToken)
 }
 
 func parsedFormData(request events.APIGatewayProxyRequest) (int, int, error) {
@@ -55,40 +64,15 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, err
 	}
 
-	resutls, err := datas.Fetch(limit, offset, primaryUrl, authToken)
+	total, numError, err := c.Run(limit, offset)
 	if err != nil {
-		slog.Error("Error fetching datas", "error", err)
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, err
 	}
 
-	var m monitor.IMonitor
-	monitorErr := 0
-
-	wg := new(sync.WaitGroup)
-	for _, result := range resutls {
-		m, err = monitor.GetMonitoring(result)
-		if err != nil {
-			monitorErr++
-			slog.Error("Error getting monitoring", "error", err)
-			continue
-		}
-		wg.Add(1)
-		go func(m monitor.IMonitor) {
-			defer wg.Done()
-			err = m.Launch()
-
-			if err != nil {
-				monitorErr++
-				slog.Error("Error launching monitoring", "error", err)
-			}
-		}(m)
-	}
-	wg.Wait()
-
-	if monitorErr > 0 {
+	if numError > 0 {
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusAccepted,
-			Body:       fmt.Sprintf("%d/%d OK", monitorErr, len(resutls)),
+			Body:       fmt.Sprintf("%d/%d OK", numError, total),
 		}, nil
 	}
 	return events.APIGatewayProxyResponse{

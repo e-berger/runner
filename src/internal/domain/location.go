@@ -1,11 +1,11 @@
-package monitoring
+package domain
 
 import "fmt"
 
-type LocationType uint
+type Location uint
 
 const (
-	UNKNOWNLOCATION LocationType = iota
+	UNKNOWNLOCATION Location = iota
 	NORTHAMERICA
 	SOUTHAMERICA
 	EUROPE
@@ -29,7 +29,7 @@ const (
 	AfricaLocationString = "africa"
 )
 
-func (l LocationType) String() string {
+func (l Location) String() string {
 	switch l {
 	case NORTHAMERICA:
 		return NorthAmericaLocationString
@@ -49,7 +49,7 @@ func (l LocationType) String() string {
 }
 
 // ParseLocation parses a location string into a Location
-func ParseLocation(location string) (LocationType, error) {
+func ParseLocation(location string) (Location, error) {
 	switch location {
 	case NorthAmericaLocationString:
 		return NORTHAMERICA, nil

@@ -6,7 +6,8 @@ Lambda runner that execute monitor
 
 ```bash
 TURSO_TOKEN: xxx
-TURSO_DATABASE: xxxx  #only database name
+TURSO_DATABASE: xxxx  # only database name
+PUSHGATEWAY: xxxx # pushgateway url
 ```
 
 Another way is to setup a file `.env.local.json` with this format
@@ -16,6 +17,7 @@ Another way is to setup a file `.env.local.json` with this format
     "Runner": {
         "TURSO_TOKEN": "xxxx",
         "TURSO_DATABASE": "xxxx"
+        "PUSHGATEWAY": "xxxx"
     }
 }
 ```
@@ -29,7 +31,7 @@ goreleaser release --snapshot --clean
 
 ## lauch local sam
 
-lambda runner will ba available at `http://localhost:3000/runner`
+lambda runner will be available at `http://localhost:3000/runner`
 
 ```bash
 make sam-local
