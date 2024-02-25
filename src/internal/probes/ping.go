@@ -26,7 +26,7 @@ func (t *pingProbe) GetType() domain.ProbeType {
 	return t.Type
 }
 
-func (t *pingProbe) Launch() error {
+func (t *pingProbe) Launch() (metrics.IMetrics, error) {
 	// msg := &icmp.Message{
 	// 	Type: ipv4.ICMPType,
 	// 	Code: 0,
@@ -40,11 +40,7 @@ func (t *pingProbe) Launch() error {
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
-	return nil
-}
-
-func (t *pingProbe) Push(pushGateway *metrics.Push) error {
-	return nil
+	return nil, nil
 }
 
 func (t *pingProbe) String() string {

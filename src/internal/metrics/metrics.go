@@ -3,6 +3,8 @@ package metrics
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type IMetrics interface {
@@ -10,6 +12,7 @@ type IMetrics interface {
 	GetLocation() string
 	GetLatency() float64
 	String() string
+	GetMetrics() prometheus.Collector
 }
 
 type Metrics struct {
@@ -42,4 +45,8 @@ func (r *Metrics) GetLatency() float64 {
 
 func (r *Metrics) String() string {
 	return fmt.Sprintf("Id: %s, Location: %s, Latency: %f, Valid: %s", r.Id, r.Location, r.Latency, r.Valid)
+}
+
+func (r *Metrics) GetMetrics() prometheus.Collector {
+	return nil
 }

@@ -3,6 +3,8 @@ package metrics
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type MetricsHttp struct {
@@ -42,4 +44,20 @@ func NewResultHttpDetails(id string, location int, latency int64, valid int, htt
 		HttpMethod: httpMethod,
 		StatusCode: strconv.Itoa(statusCode),
 	}
+}
+
+func (r *MetricsHttp) GetMetrics() prometheus.Collector {
+	completionTime := prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "sheepdog_runner",
+		Name:      "request_duration_seconds",
+		Help:      "Duration of the request.",
+		Buckets:   []float64{0.1, 0.2, 0.3},
+	}, []string{"method", "status", "location"})
+
+	completionTime.With(prometheus.Labels{
+		"method":   r.HttpMethod,
+		"status":   r.StatusCode,
+		"location": r.Location,
+	}).Observe(r.Latency)
+	return completionTime
 }

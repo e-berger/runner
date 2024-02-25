@@ -9,7 +9,6 @@ import (
 
 	"github.com/e-berger/sheepdog-runner/src/internal/domain"
 	"github.com/e-berger/sheepdog-runner/src/internal/metrics"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type httpProbe struct {
@@ -45,22 +44,22 @@ func NewHttpProbe(p *domain.Probe) (domain.IProbe, error) {
 	return h, nil
 }
 
-func (t *httpProbe) Launch() error {
+func (t *httpProbe) Launch() (metrics.IMetrics, error) {
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse },
 	}
 
 	req, err := http.NewRequest(t.HttpMethod, t.Url, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	time_start := time.Now()
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	t.result = metrics.NewResultHttpDetails(
+	result := metrics.NewResultHttpDetails(
 		t.Id,
 		int(t.Location),
 		time.Since(time_start).Milliseconds(),
@@ -68,23 +67,7 @@ func (t *httpProbe) Launch() error {
 		t.HttpMethod,
 		resp.StatusCode)
 
-	return nil
-}
-
-func (t *httpProbe) Push(pushGateway *metrics.Push) error {
-	completionTime := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "sheepdog_runner",
-		Name:      "request_duration_seconds",
-		Help:      "Duration of the request.",
-		Buckets:   []float64{0.1, 0.2, 0.3},
-	}, []string{"method", "status", "location"})
-
-	completionTime.With(prometheus.Labels{
-		"method":   t.HttpMethod,
-		"status":   t.result.GeStatusCode(),
-		"location": t.result.GetLocation(),
-	}).Observe(t.result.GetLatency())
-	return pushGateway.Send(t.Id, completionTime)
+	return result, nil
 }
 
 func (t *httpProbe) String() string {

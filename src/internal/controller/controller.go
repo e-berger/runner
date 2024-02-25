@@ -39,14 +39,14 @@ func (c *Controller) Run(limit int, offset int) (int, int, error) {
 		go func(probe domain.IProbe) {
 			slog.Info("Launching monitoring", "probe", probe.String())
 			defer wg.Done()
-			err = probe.Launch()
+			result, err := probe.Launch()
 			if err != nil {
 				monitorErr++
 				slog.Error("Error launching monitoring", "error", err)
 			}
 			slog.Info("Metrics monitoring", "probe", probe.GetResult().String())
 			if c.pushGateway != nil {
-				err = probe.Push(c.pushGateway)
+				err = c.pushGateway.Send(result.GetId(), result.GetMetrics())
 				if err != nil {
 					monitorErr++
 					slog.Error("Error pushing monitoring", "error", err)

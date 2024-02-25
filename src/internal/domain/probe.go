@@ -4,8 +4,7 @@ import "github.com/e-berger/sheepdog-runner/src/internal/metrics"
 
 type IProbe interface {
 	GetType() ProbeType
-	Launch() error
-	Push(pushGateway *metrics.Push) error
+	Launch() (metrics.IMetrics, error)
 	String() string
 	GetResult() metrics.IMetrics
 }
