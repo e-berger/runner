@@ -19,11 +19,11 @@ func NewPush(pushGateway string) *Push {
 	}
 }
 
-func (p *Push) Send(id string, completionTime prometheus.Collector) error {
+func (p *Push) Send(id string, collector prometheus.Collector) error {
 	pusher := push.New(p.pushGateway, id)
 	ctx, cncl := context.WithTimeout(context.Background(), time.Second*3)
 	defer cncl()
-	err := pusher.Collector(completionTime).PushContext(ctx)
+	err := pusher.Collector(collector).PushContext(ctx)
 	if err != nil {
 		slog.Error("Could not push completion time to Pushgateway:", "error", err)
 		return err
