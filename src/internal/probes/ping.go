@@ -27,6 +27,19 @@ func (t *pingProbe) GetType() domain.ProbeType {
 }
 
 func (t *pingProbe) Launch() error {
+	// msg := &icmp.Message{
+	// 	Type: ipv4.ICMPType,
+	// 	Code: 0,
+	// 	Body: &icmp.Echo{
+	// 		ID:   os.Getpid() & 0xffff,
+	// 		Seq:  0,
+	// 		Data: []byte("hello"),
+	// 	},
+	// }
+	// wb, err := msg.Marshal(nil)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 	return nil
 }
 
@@ -35,7 +48,7 @@ func (t *pingProbe) Push(pushGateway *metrics.Push) error {
 }
 
 func (t *pingProbe) String() string {
-	return fmt.Sprintf("ping test %s", t.Id)
+	return fmt.Sprintf("ping probe %s", t.Id)
 }
 
 func (t *pingProbe) GetResult() metrics.IMetrics {

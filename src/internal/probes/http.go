@@ -77,14 +77,18 @@ func (t *httpProbe) Push(pushGateway *metrics.Push) error {
 		Name:      "request_duration_seconds",
 		Help:      "Duration of the request.",
 		Buckets:   []float64{0.1, 0.2, 0.3},
-	}, []string{"method", "status"})
+	}, []string{"method", "status", "location"})
 
-	completionTime.With(prometheus.Labels{"method": t.HttpMethod, "status": t.result.GeStatusCode()}).Observe(t.result.GetLatency())
+	completionTime.With(prometheus.Labels{
+		"method":   t.HttpMethod,
+		"status":   t.result.GeStatusCode(),
+		"location": t.result.GetLocation(),
+	}).Observe(t.result.GetLatency())
 	return pushGateway.Send(t.Id, completionTime)
 }
 
 func (t *httpProbe) String() string {
-	return fmt.Sprintf("http test %s", t.Id)
+	return fmt.Sprintf("http probe %s", t.Id)
 }
 
 func (t *httpProbe) GetType() domain.ProbeType {

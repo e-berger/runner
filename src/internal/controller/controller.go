@@ -10,18 +10,16 @@ import (
 )
 
 type Controller struct {
-	authToken   string
 	database    *db.TursoDatabase
 	pushGateway *metrics.Push
 }
 
-func NewController(database string, pushGateway string, authToken string) *Controller {
+func NewController(database string, authToken string, pushGateway string) *Controller {
 	var p *metrics.Push
 	if pushGateway != "" {
 		p = metrics.NewPush(pushGateway)
 	}
 	return &Controller{
-		authToken:   authToken,
 		database:    db.NewTursoDatabase(database, authToken),
 		pushGateway: p,
 	}
@@ -36,26 +34,27 @@ func (c *Controller) Run(limit int, offset int) (int, int, error) {
 
 	monitorErr := 0
 	wg := new(sync.WaitGroup)
-	for _, p := range probesDatas {
+	for _, probe := range probesDatas {
 		wg.Add(1)
-		go func(p domain.IProbe) {
-			slog.Info("Launching monitoring", "probe", p.String())
+		go func(probe domain.IProbe) {
+			slog.Info("Launching monitoring", "probe", probe.String())
 			defer wg.Done()
-			err = p.Launch()
+			err = probe.Launch()
 			if err != nil {
 				monitorErr++
 				slog.Error("Error launching monitoring", "error", err)
 			}
-			slog.Info("Metrics monitoring", "probe", p.GetResult().String())
+			slog.Info("Metrics monitoring", "probe", probe.GetResult().String())
 			if c.pushGateway != nil {
-				err = p.Push(c.pushGateway)
+				err = probe.Push(c.pushGateway)
 				if err != nil {
 					monitorErr++
 					slog.Error("Error pushing monitoring", "error", err)
 				}
+			} else {
+				slog.Info("No push gateway defined")
 			}
-
-		}(p)
+		}(probe)
 	}
 	wg.Wait()
 	return len(probesDatas), monitorErr, nil

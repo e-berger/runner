@@ -33,7 +33,7 @@ func init() {
 	if pushgateway == "" {
 		slog.Info("PUSHGATEWAY not set, metrics will not be pushed")
 	}
-	c = controller.NewController(database, pushgateway, authToken)
+	c = controller.NewController(database, authToken, pushgateway)
 }
 
 func parsedFormData(request events.APIGatewayProxyRequest) (int, int, error) {
