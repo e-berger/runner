@@ -80,11 +80,11 @@ func (t *httpProbe) Push(pushGateway *metrics.Push) error {
 	}, []string{"method", "status"})
 
 	completionTime.With(prometheus.Labels{"method": t.HttpMethod, "status": t.result.GeStatusCode()}).Observe(t.result.GetLatency())
-	return pushGateway.Send(fmt.Sprint(t.Id), completionTime)
+	return pushGateway.Send(t.Id, completionTime)
 }
 
 func (t *httpProbe) String() string {
-	return fmt.Sprintf("http test %d", t.Id)
+	return fmt.Sprintf("http test %s", t.Id)
 }
 
 func (t *httpProbe) GetType() domain.ProbeType {

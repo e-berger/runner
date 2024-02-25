@@ -35,7 +35,7 @@ func (t *pingProbe) Push(pushGateway *metrics.Push) error {
 }
 
 func (t *pingProbe) String() string {
-	return fmt.Sprintf("ping test %d", t.Id)
+	return fmt.Sprintf("ping test %s", t.Id)
 }
 
 func (t *pingProbe) GetResult() metrics.IMetrics {

@@ -31,10 +31,10 @@ func (r *MetricsHttp) String() string {
 	return fmt.Sprintf("Id: %s, Location: %s, Latency: %f, Valid: %s, HttpMethod: %s, StatusCode: %s", r.Id, r.Location, r.Latency, r.Valid, r.HttpMethod, r.StatusCode)
 }
 
-func NewResultHttpDetails(id int, location int, latency int64, valid int, httpMethod string, statusCode int) *MetricsHttp {
+func NewResultHttpDetails(id string, location int, latency int64, valid int, httpMethod string, statusCode int) *MetricsHttp {
 	return &MetricsHttp{
 		Metrics: Metrics{
-			Id:       strconv.Itoa(id),
+			Id:       id,
 			Location: strconv.Itoa(location),
 			Latency:  float64(latency) / 1000.0,
 			Valid:    strconv.Itoa(valid),

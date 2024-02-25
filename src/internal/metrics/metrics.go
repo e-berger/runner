@@ -19,9 +19,9 @@ type Metrics struct {
 	Valid    string  `json:"valid"`
 }
 
-func NewMetrics(id int, location int, latency int64, valid int) IMetrics {
+func NewMetrics(id string, location int, latency int64, valid int) IMetrics {
 	return &Metrics{
-		Id:       strconv.Itoa(id),
+		Id:       id,
 		Location: strconv.Itoa(location),
 		Latency:  float64(latency) / 1000.0,
 		Valid:    strconv.Itoa(valid),

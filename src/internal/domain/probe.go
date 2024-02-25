@@ -11,7 +11,7 @@ type IProbe interface {
 }
 
 type Probe struct {
-	Id       int       `json:"id"`
+	Id       string    `json:"id"`
 	Type     ProbeType `json:"type"`
 	Location Location  `json:"location"`
 	Data     string    `json:"data"`
@@ -22,7 +22,7 @@ func NewProbe(columns []string, row []interface{}) (*Probe, error) {
 	for i, col := range columns {
 		switch col {
 		case "id":
-			probe.Id = int(row[i].(float64))
+			probe.Id = row[i].(string)
 		case "type":
 			probe.Type = ProbeType(int(row[i].(float64)))
 		case "location":

@@ -1,7 +1,9 @@
 package metrics
 
 import (
+	"context"
 	"log/slog"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
@@ -17,9 +19,11 @@ func NewPush(pushGateway string) *Push {
 	}
 }
 
-func (p *Push) Send(job string, completionTime prometheus.Collector) error {
-	pusher := push.New(p.pushGateway, job)
-	err := pusher.Collector(completionTime).Push()
+func (p *Push) Send(id string, completionTime prometheus.Collector) error {
+	pusher := push.New(p.pushGateway, id)
+	ctx, cncl := context.WithTimeout(context.Background(), time.Second*3)
+	defer cncl()
+	err := pusher.Collector(completionTime).PushContext(ctx)
 	if err != nil {
 		slog.Error("Could not push completion time to Pushgateway:", "error", err)
 		return err

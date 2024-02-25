@@ -13,7 +13,7 @@ func (t *TursoDatabase) GetProbes(limit int, offset int) ([]domain.IProbe, error
 	statements := map[string]interface{}{
 		"statements": []map[string]interface{}{
 			{
-				"q": "SELECT id, type, data, location FROM probes LIMIT :limit OFFSET :offset",
+				"q": "SELECT id, type, data, location FROM probes ORDER BY id LIMIT :limit OFFSET :offset",
 				"params": map[string]interface{}{
 					":limit":  limit,
 					":offset": offset,
