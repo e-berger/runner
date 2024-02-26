@@ -5,11 +5,10 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/e-berger/sheepdog-runner/internal/domain"
 	"github.com/e-berger/sheepdog-runner/internal/probes"
 )
 
-func (t *TursoDatabase) GetProbes(limit int, offset int) ([]domain.IProbe, error) {
+func (t *TursoDatabase) GetProbes(limit int, offset int) ([]probes.IProbe, error) {
 	statements := map[string]interface{}{
 		"statements": []map[string]interface{}{
 			{
@@ -40,12 +39,12 @@ func (t *TursoDatabase) GetProbes(limit int, offset int) ([]domain.IProbe, error
 	return probes, nil
 }
 
-func parseProbes(result []Response) ([]domain.IProbe, error) {
-	var probesArray []domain.IProbe
-	var p domain.IProbe
+func parseProbes(result []Response) ([]probes.IProbe, error) {
+	var probesArray []probes.IProbe
+	var p probes.IProbe
 	for _, result := range result {
 		for l := range result.Results.Rows {
-			probe, err := domain.NewProbe(result.Results.Columns, result.Results.Rows[l])
+			probe, err := probes.NewProbe(result.Results.Columns, result.Results.Rows[l])
 			if err != nil {
 				return nil, err
 			}

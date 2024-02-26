@@ -1,4 +1,4 @@
-package domain
+package probes
 
 import "github.com/e-berger/sheepdog-runner/internal/metrics"
 

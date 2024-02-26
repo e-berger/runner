@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	db "github.com/e-berger/sheepdog-runner/internal/database"
-	"github.com/e-berger/sheepdog-runner/internal/domain"
 	"github.com/e-berger/sheepdog-runner/internal/metrics"
+	"github.com/e-berger/sheepdog-runner/internal/probes"
 )
 
 type Controller struct {
@@ -36,7 +36,7 @@ func (c *Controller) Run(limit int, offset int) (int, int, error) {
 	wg := new(sync.WaitGroup)
 	for _, probe := range probesDatas {
 		wg.Add(1)
-		go func(probe domain.IProbe) {
+		go func(probe probes.IProbe) {
 			slog.Info("Launching monitoring", "probe", probe.String())
 			defer wg.Done()
 			result, err := probe.Launch()

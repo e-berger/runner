@@ -3,26 +3,25 @@ package probes
 import (
 	"fmt"
 
-	"github.com/e-berger/sheepdog-runner/internal/domain"
 	"github.com/e-berger/sheepdog-runner/internal/metrics"
 )
 
 type pingProbe struct {
-	domain.Probe
+	Probe
 	result *metrics.MetricsHttp
 }
 
-func NewPingProbe(p *domain.Probe) (domain.IProbe, error) {
+func NewPingProbe(p *Probe) (IProbe, error) {
 	return &pingProbe{
-		Probe: domain.Probe{
+		Probe: Probe{
 			Id:       p.Id,
-			Type:     domain.PING,
+			Type:     PING,
 			Location: p.Location,
 		},
 	}, nil
 }
 
-func (t *pingProbe) GetType() domain.ProbeType {
+func (t *pingProbe) GetType() ProbeType {
 	return t.Type
 }
 

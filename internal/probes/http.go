@@ -7,12 +7,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/e-berger/sheepdog-runner/internal/domain"
 	"github.com/e-berger/sheepdog-runner/internal/metrics"
 )
 
 type httpProbe struct {
-	domain.Probe
+	Probe
 	httpProbeData
 	result *metrics.MetricsHttp
 }
@@ -22,7 +21,7 @@ type httpProbeData struct {
 	Url        string `json:"url"`
 }
 
-func NewHttpProbe(p *domain.Probe) (domain.IProbe, error) {
+func NewHttpProbe(p *Probe) (IProbe, error) {
 	var d httpProbeData
 	err := json.Unmarshal([]byte(p.Data), &d)
 	if err != nil {
@@ -31,9 +30,9 @@ func NewHttpProbe(p *domain.Probe) (domain.IProbe, error) {
 	}
 
 	h := &httpProbe{
-		Probe: domain.Probe{
+		Probe: Probe{
 			Id:       p.Id,
-			Type:     domain.HTTP,
+			Type:     HTTP,
 			Location: p.Location,
 		},
 		httpProbeData: httpProbeData{
@@ -74,7 +73,7 @@ func (t *httpProbe) String() string {
 	return fmt.Sprintf("http probe %s", t.Id)
 }
 
-func (t *httpProbe) GetType() domain.ProbeType {
+func (t *httpProbe) GetType() ProbeType {
 	return t.Type
 }
 
