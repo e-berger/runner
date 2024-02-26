@@ -6,12 +6,12 @@ import (
 	"github.com/e-berger/sheepdog-runner/internal/metrics"
 )
 
-type pingProbe struct {
+type tcpProbe struct {
 	Probe
 }
 
-func NewPingProbe(p *Probe) (IProbe, error) {
-	return &pingProbe{
+func NewTcpProbe(p *Probe) (IProbe, error) {
+	return &tcpProbe{
 		Probe: Probe{
 			Id:       p.Id,
 			Type:     PING,
@@ -20,11 +20,11 @@ func NewPingProbe(p *Probe) (IProbe, error) {
 	}, nil
 }
 
-func (t *pingProbe) GetType() ProbeType {
+func (t *tcpProbe) GetType() ProbeType {
 	return t.Type
 }
 
-func (t *pingProbe) Launch() (metrics.IMetrics, error) {
+func (t *tcpProbe) Launch() (metrics.IMetrics, error) {
 	// msg := &icmp.Message{
 	// 	Type: ipv4.ICMPType,
 	// 	Code: 0,
@@ -41,6 +41,6 @@ func (t *pingProbe) Launch() (metrics.IMetrics, error) {
 	return nil, nil
 }
 
-func (t *pingProbe) String() string {
-	return fmt.Sprintf("ping probe %s", t.Id)
+func (t *tcpProbe) String() string {
+	return fmt.Sprintf("tcp probe %s", t.Id)
 }

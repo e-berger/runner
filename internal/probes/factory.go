@@ -10,6 +10,8 @@ func CreateProbeFromType(p *Probe) (IProbe, error) {
 		return NewHttpProbe(p)
 	case p.Type == PING:
 		return NewPingProbe(p)
+	case p.Type == TCP:
+		return NewTcpProbe(p)
 	default:
 		return nil, fmt.Errorf("probe type %d not found", p.Type)
 	}

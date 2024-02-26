@@ -10,7 +10,7 @@ import (
 )
 
 type Controller struct {
-	database    *db.TursoDatabase
+	Database    *db.TursoDatabase
 	pushGateway *metrics.Push
 }
 
@@ -20,18 +20,12 @@ func NewController(database string, authToken string, pushGateway string) *Contr
 		p = metrics.NewPush(pushGateway)
 	}
 	return &Controller{
-		database:    db.NewTursoDatabase(database, authToken),
+		Database:    db.NewTursoDatabase(database, authToken),
 		pushGateway: p,
 	}
 }
 
-func (c *Controller) Run(limit int, offset int) (int, int, error) {
-	probesDatas, err := c.database.GetProbes(limit, offset)
-	if err != nil {
-		slog.Error("Error fetching datas", "error", err)
-		return 0, 0, err
-	}
-
+func (c *Controller) Run(probesDatas []probes.IProbe) (int, int, error) {
 	monitorErr := 0
 	wg := new(sync.WaitGroup)
 	for _, probe := range probesDatas {
@@ -44,9 +38,9 @@ func (c *Controller) Run(limit int, offset int) (int, int, error) {
 				monitorErr++
 				slog.Error("Error launching monitoring", "error", err)
 			}
-			slog.Info("Metrics monitoring", "probe", probe.GetResult().String())
+			slog.Info("Metrics monitoring", "probe", result.String())
 			if c.pushGateway != nil {
-				err = c.pushGateway.Send(result.GetId(), result.GetMetrics())
+				err = c.SendMetrics(result)
 				if err != nil {
 					monitorErr++
 					slog.Error("Error pushing monitoring", "error", err)
@@ -58,4 +52,8 @@ func (c *Controller) Run(limit int, offset int) (int, int, error) {
 	}
 	wg.Wait()
 	return len(probesDatas), monitorErr, nil
+}
+
+func (c *Controller) SendMetrics(metrics metrics.IMetrics) error {
+	return c.pushGateway.Send(metrics.GetId(), metrics.GetMetrics())
 }

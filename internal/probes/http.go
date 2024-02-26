@@ -13,7 +13,6 @@ import (
 type httpProbe struct {
 	Probe
 	httpProbeData
-	result *metrics.MetricsHttp
 }
 
 type httpProbeData struct {
@@ -75,8 +74,4 @@ func (t *httpProbe) String() string {
 
 func (t *httpProbe) GetType() ProbeType {
 	return t.Type
-}
-
-func (t *httpProbe) GetResult() metrics.IMetrics {
-	return t.result
 }

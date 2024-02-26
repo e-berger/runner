@@ -6,7 +6,6 @@ type IProbe interface {
 	GetType() ProbeType
 	Launch() (metrics.IMetrics, error)
 	String() string
-	GetResult() metrics.IMetrics
 }
 
 type Probe struct {
