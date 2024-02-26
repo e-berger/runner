@@ -3,8 +3,8 @@ package probes
 import (
 	"fmt"
 
-	"github.com/e-berger/sheepdog-runner/src/internal/domain"
-	"github.com/e-berger/sheepdog-runner/src/internal/metrics"
+	"github.com/e-berger/sheepdog-runner/internal/domain"
+	"github.com/e-berger/sheepdog-runner/internal/metrics"
 )
 
 type pingProbe struct {

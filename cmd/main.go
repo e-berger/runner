@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/e-berger/sheepdog-runner/src/internal/controller"
+	"github.com/e-berger/sheepdog-runner/internal/controller"
 )
 
 var c *controller.Controller

@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/e-berger/sheepdog-runner/src/internal/domain"
-	"github.com/e-berger/sheepdog-runner/src/internal/probes"
+	"github.com/e-berger/sheepdog-runner/internal/domain"
+	"github.com/e-berger/sheepdog-runner/internal/probes"
 )
 
 func (t *TursoDatabase) GetProbes(limit int, offset int) ([]domain.IProbe, error) {

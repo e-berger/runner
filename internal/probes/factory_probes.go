@@ -3,7 +3,7 @@ package probes
 import (
 	"fmt"
 
-	"github.com/e-berger/sheepdog-runner/src/internal/domain"
+	"github.com/e-berger/sheepdog-runner/internal/domain"
 )
 
 func CreateProbeFromType(p *domain.Probe) (domain.IProbe, error) {

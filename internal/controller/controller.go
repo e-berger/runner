@@ -4,9 +4,9 @@ import (
 	"log/slog"
 	"sync"
 
-	db "github.com/e-berger/sheepdog-runner/src/internal/database"
-	"github.com/e-berger/sheepdog-runner/src/internal/domain"
-	"github.com/e-berger/sheepdog-runner/src/internal/metrics"
+	db "github.com/e-berger/sheepdog-runner/internal/database"
+	"github.com/e-berger/sheepdog-runner/internal/domain"
+	"github.com/e-berger/sheepdog-runner/internal/metrics"
 )
 
 type Controller struct {

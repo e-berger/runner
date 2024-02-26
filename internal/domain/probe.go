@@ -1,6 +1,6 @@
 package domain
 
-import "github.com/e-berger/sheepdog-runner/src/internal/metrics"
+import "github.com/e-berger/sheepdog-runner/internal/metrics"
 
 type IProbe interface {
 	GetType() ProbeType
