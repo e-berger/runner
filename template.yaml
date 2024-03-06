@@ -38,8 +38,6 @@ Resources:
         LogGroup: !Ref CloudWatchLogGroup
       Environment:
         Variables:
-          TURSO_TOKEN: ""
-          TURSO_DATABASE: ""
           PUSHGATEWAY: ""
 Outputs:
   Runner:

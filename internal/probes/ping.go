@@ -13,9 +13,8 @@ type pingProbe struct {
 func NewPingProbe(p *Probe) (IProbe, error) {
 	return &pingProbe{
 		Probe: Probe{
-			Id:       p.Id,
-			Type:     PING,
-			Location: p.Location,
+			Id:   p.Id,
+			Type: PING,
 		},
 	}, nil
 }

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -33,34 +32,35 @@ func parsedFormData(request events.APIGatewayProxyRequest) (int, int, error) {
 }
 
 func ApiGatewayEventHandler(c *controller.Controller, apiEvent events.APIGatewayProxyRequest) (Response, error) {
+	slog.Info("Apigateway Event")
 	var response = Response{}
-	limit, offset, err := parsedFormData(apiEvent)
-	if err != nil {
-		slog.Error("Error parsing form data", "error", err)
-		response.APIGatewayProxyResponse = &events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}
-		return response, err
-	}
+	// limit, offset, err := parsedFormData(apiEvent)
+	// if err != nil {
+	// 	slog.Error("Error parsing form data", "error", err)
+	// 	response.APIGatewayProxyResponse = &events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}
+	// 	return response, err
+	// }
 
-	probes, err := c.Database.GetProbes(limit, offset)
-	if err != nil {
-		slog.Error("Error fetching datas", "error", err)
-		response.APIGatewayProxyResponse = &events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}
-		return response, err
-	}
+	// probes, err := c.Database.GetProbes(limit, offset)
+	// if err != nil {
+	// 	slog.Error("Error fetching datas", "error", err)
+	// 	response.APIGatewayProxyResponse = &events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}
+	// 	return response, err
+	// }
 
-	total, numError, err := c.Run(probes)
-	if err != nil {
-		response.APIGatewayProxyResponse = &events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}
-		return response, err
-	}
+	// total, numError, err := c.Run(probes)
+	// if err != nil {
+	// 	response.APIGatewayProxyResponse = &events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}
+	// 	return response, err
+	// }
 
-	if numError > 0 {
-		response.APIGatewayProxyResponse = &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusAccepted,
-			Body:       fmt.Sprintf("%d/%d OK", numError, total),
-		}
-		return response, nil
-	}
+	// if numError > 0 {
+	// 	response.APIGatewayProxyResponse = &events.APIGatewayProxyResponse{
+	// 		StatusCode: http.StatusAccepted,
+	// 		Body:       fmt.Sprintf("%d/%d OK", numError, total),
+	// 	}
+	// 	return response, nil
+	// }
 	response.APIGatewayProxyResponse = &events.APIGatewayProxyResponse{
 		StatusCode: http.StatusOK,
 		Body:       "OK",

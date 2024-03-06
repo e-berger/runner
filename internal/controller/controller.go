@@ -4,23 +4,20 @@ import (
 	"log/slog"
 	"sync"
 
-	db "github.com/e-berger/sheepdog-runner/internal/database"
 	"github.com/e-berger/sheepdog-runner/internal/metrics"
 	"github.com/e-berger/sheepdog-runner/internal/probes"
 )
 
 type Controller struct {
-	Database    *db.TursoDatabase
 	pushGateway *metrics.Push
 }
 
-func NewController(database string, authToken string, pushGateway string) *Controller {
+func NewController(pushGateway string) *Controller {
 	var p *metrics.Push
 	if pushGateway != "" {
 		p = metrics.NewPush(pushGateway)
 	}
 	return &Controller{
-		Database:    db.NewTursoDatabase(database, authToken),
 		pushGateway: p,
 	}
 }
@@ -51,6 +48,7 @@ func (c *Controller) Run(probesDatas []probes.IProbe) (int, int, error) {
 		}(probe)
 	}
 	wg.Wait()
+	slog.Info("Monitor", "nb error", monitorErr)
 	return len(probesDatas), monitorErr, nil
 }
 

@@ -5,8 +5,6 @@ Lambda runner that execute monitor
 ## Environment variable
 
 ```bash
-TURSO_TOKEN: xxx
-TURSO_DATABASE: xxxx  # only database name
 PUSHGATEWAY: xxxx # pushgateway url
 ```
 
@@ -15,8 +13,6 @@ Another way is to setup a file `.env.local.json` with this format
 ```yaml
 {
     "Runner": {
-        "TURSO_TOKEN": "xxxx",
-        "TURSO_DATABASE": "xxxx"
         "PUSHGATEWAY": "xxxx"
     }
 }
