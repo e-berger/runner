@@ -17,8 +17,10 @@ type Event struct {
 
 func (e Event) Handler(c *controller.Controller) (Response, error) {
 	switch {
+	//api gateway
 	case e.APIGatewayProxyRequest.Body != "":
 		return ApiGatewayEventHandler(c, e.APIGatewayProxyRequest)
+	// eventbridge / cloudwatch
 	case len(e.CloudWatchEvent.Detail) > 0:
 		return CloudWatchEventHandler(c, e.CloudWatchEvent)
 	default:

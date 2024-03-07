@@ -10,6 +10,8 @@ import (
 
 type IProbe interface {
 	GetType() ProbeType
+	GetId() string
+	GetError() bool
 	Launch() (metrics.IMetrics, error)
 	String() string
 }
@@ -32,6 +34,7 @@ type Probe struct {
 	Type     ProbeType       `json:"type"`
 	Location Location        `json:"location,omitempty"`
 	Data     json.RawMessage `json:"info"`
+	Error    bool            `json:"error"`
 }
 
 func UnmarshalJSON(data []byte, location string) (*Probe, error) {
@@ -54,8 +57,6 @@ func (p *Probe) CreateProbeFromType() (IProbe, error) {
 	switch {
 	case p.Type == HTTP:
 		return NewHttpProbe(p)
-	case p.Type == PING:
-		return NewPingProbe(p)
 	case p.Type == TCP:
 		return NewTcpProbe(p)
 	}

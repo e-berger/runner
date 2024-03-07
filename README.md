@@ -1,11 +1,13 @@
 # sheepdog-runner
 
-Lambda runner that execute monitor
+Lambda runner that execute monitoring and alerting tasks
 
 ## Environment variable
 
 ```bash
 PUSHGATEWAY: xxxx # pushgateway url
+LOGLEVEL: DEBUG | INFO | WARN | ERROR  # log level default INFO
+SQS_QUEUE_NAME: xxx # sqs queue name default : test
 ```
 
 Another way is to setup a file `.env.local.json` with this format

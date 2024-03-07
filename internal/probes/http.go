@@ -16,22 +16,6 @@ type httpProbe struct {
 	httpProbeData
 }
 
-// "location": "australia",
-// "items": [
-//     {
-//         "id": "2d2f35Ry74DX9F9piVm4FWUuz3b",
-//         "info": {
-//             "timeout": 10000000000,
-//             "method": "GET",
-//             "url": "https://observations-service-api.eu.finalcad.cloud/healthz/live",
-//             "expected_status_code": [
-//                 200
-//             ]
-//         },
-//         "type": 2
-//     }
-// ]
-
 type httpProbeData struct {
 	HttpMethod            string            `json:"method"`
 	Url                   string            `json:"url"`
@@ -42,7 +26,7 @@ type httpProbeData struct {
 	NotExpectedStatusCode []int             `json:"not_expected_status_code"`
 	ExpectedContent       string            `json:"expected_content"`
 	ExpectedHeaders       map[string]string `json:"expected_headers"`
-	FollowRedirect        int               `json:"follow_redirect"`
+	FollowRedirects       int               `json:"follow_redirects"`
 }
 
 func NewHttpProbe(p *Probe) (IProbe, error) {
@@ -58,12 +42,13 @@ func NewHttpProbe(p *Probe) (IProbe, error) {
 			Id:       p.Id,
 			Type:     HTTP,
 			Location: p.Location,
+			Error:    p.Error,
 		},
 		httpProbeData: httpProbeData{
-			HttpMethod:     d.HttpMethod,
-			Url:            d.Url,
-			Timeout:        d.Timeout,
-			FollowRedirect: d.FollowRedirect,
+			HttpMethod:      d.HttpMethod,
+			Url:             d.Url,
+			Timeout:         d.Timeout,
+			FollowRedirects: d.FollowRedirects,
 		},
 	}
 	return h, nil
@@ -71,9 +56,9 @@ func NewHttpProbe(p *Probe) (IProbe, error) {
 
 func (t *httpProbe) Launch() (metrics.IMetrics, error) {
 
-	//Redirect
+	//redirect
 	var checkRedirect func(req *http.Request, via []*http.Request) error
-	if t.FollowRedirect > 0 {
+	if t.FollowRedirects > 0 {
 		checkRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
 	}
 	client := &http.Client{
@@ -81,18 +66,22 @@ func (t *httpProbe) Launch() (metrics.IMetrics, error) {
 	}
 
 	//timeout
-	time_start := time.Now()
-	ctx, cancel := context.WithCancel(context.TODO())
-	time.AfterFunc(time.Duration(t.Timeout)*time.Second, func() {
-		cancel()
-	})
+	timeout := time.Duration(t.Timeout)
+	slog.Debug("Probe timeout", "second", timeout.Seconds())
 
 	req, err := http.NewRequest(t.HttpMethod, t.Url, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	ctx, cancel := context.WithCancel(context.TODO())
 	req = req.WithContext(ctx)
 
+	time.AfterFunc(timeout, func() {
+		cancel()
+	})
+
+	time_start := time.Now()
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -114,4 +103,12 @@ func (t *httpProbe) String() string {
 
 func (t *httpProbe) GetType() ProbeType {
 	return t.Type
+}
+
+func (p *httpProbe) GetId() string {
+	return p.Id
+}
+
+func (p *httpProbe) GetError() bool {
+	return p.Error
 }

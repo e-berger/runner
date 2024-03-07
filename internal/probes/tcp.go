@@ -16,12 +16,21 @@ func NewTcpProbe(p *Probe) (IProbe, error) {
 			Id:       p.Id,
 			Type:     PING,
 			Location: p.Location,
+			Error:    p.Error,
 		},
 	}, nil
 }
 
 func (t *tcpProbe) GetType() ProbeType {
 	return t.Type
+}
+
+func (t *tcpProbe) GetId() string {
+	return t.Id
+}
+
+func (t *tcpProbe) GetError() bool {
+	return t.Error
 }
 
 func (t *tcpProbe) Launch() (metrics.IMetrics, error) {
