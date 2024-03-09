@@ -45,6 +45,17 @@ func NewController(ctx context.Context, pushGateway string, sqsQueueName string)
 	}, nil
 }
 
+func (c *Controller) Run(probesDatas []probes.IProbe) {
+	monitorErr := 0
+	wg := new(sync.WaitGroup)
+	for _, probe := range probesDatas {
+		wg.Add(1)
+		go c.runProbe(probe, wg, &monitorErr)
+	}
+	wg.Wait()
+	slog.Info("End monitoring", "nb error", monitorErr)
+}
+
 func (c *Controller) runProbe(probe probes.IProbe, wg *sync.WaitGroup, monitorErr *int) {
 	slog.Info("Launching monitoring", "probe", probe.String())
 	defer wg.Done()
@@ -67,17 +78,6 @@ func (c *Controller) runProbe(probe probes.IProbe, wg *sync.WaitGroup, monitorEr
 	}
 }
 
-func (c *Controller) Run(probesDatas []probes.IProbe) {
-	monitorErr := 0
-	wg := new(sync.WaitGroup)
-	for _, probe := range probesDatas {
-		wg.Add(1)
-		go c.runProbe(probe, wg, &monitorErr)
-	}
-	wg.Wait()
-	slog.Info("End monitoring", "nb error", monitorErr)
-}
-
 func (c *Controller) SendMetrics(metrics metrics.IMetrics) error {
 	var err error
 	if c.pushGateway != nil {
@@ -93,10 +93,12 @@ func (c *Controller) SendMetrics(metrics metrics.IMetrics) error {
 }
 
 func (c *Controller) UpdateProbeStatus(probe probes.IProbe, err error) error {
+	//detect if probe status has changed
 	if (err != nil && !probe.GetError()) || (err == nil && probe.GetError()) {
+		slog.Info("Update status : needed", "probe", probe.GetError(), "error", err)
 		status := status.NewStatus(probe.GetId(), "status", !probe.GetError())
 		return c.queueMessaging.Publish(c.ctx, status)
 	}
-	slog.Info("Update status : not needed")
+	slog.Info("Update status : not needed", "probe", probe.GetError(), "error", err)
 	return nil
 }

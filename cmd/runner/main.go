@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/e-berger/sheepdog-runner/internal/controller"
 	"github.com/e-berger/sheepdog-runner/internal/handler"
+	"github.com/e-berger/sheepdog-runner/internal/infra/logger"
 )
 
 var c *controller.Controller
@@ -15,17 +16,7 @@ var err error
 var ctx = context.Background()
 
 func init() {
-	lvl := new(slog.LevelVar)
-	logLevel := os.Getenv("LOGLEVEL")
-	lvl.Set(slog.LevelInfo)
-	if logLevel != "" {
-		slog.Info("Logger", "loglevel", logLevel)
-		lvl.UnmarshalText([]byte(logLevel))
-	}
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: lvl,
-	}))
-	slog.SetDefault(logger)
+	logger.SetupLog()
 
 	pushgateway := os.Getenv("PUSHGATEWAY")
 	if pushgateway == "" {

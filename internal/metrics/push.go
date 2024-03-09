@@ -30,10 +30,3 @@ func (p *Push) Send(id string, collector prometheus.Collector) error {
 	}
 	return nil
 }
-
-func (p *Push) SignalError(id string, err error) {
-
-	// dynamo id probe
-	// update probe
-	slog.Error("Error pushing metrics", "id", id, "error", err)
-}
