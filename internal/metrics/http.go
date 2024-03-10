@@ -3,6 +3,7 @@ package metrics
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -33,10 +34,11 @@ func (r *MetricsHttp) String() string {
 	return fmt.Sprintf("Id: %s, Location: %s, Latency: %f, Valid: %s, HttpMethod: %s, StatusCode: %s", r.Id, r.Location, r.Latency, r.Valid, r.HttpMethod, r.StatusCode)
 }
 
-func NewResultHttpDetails(id string, location int, latency int64, valid int, httpMethod string, statusCode int) *MetricsHttp {
+func NewResultHttpDetails(id string, location int, started time.Time, latency int64, valid int, httpMethod string, statusCode int) *MetricsHttp {
 	return &MetricsHttp{
 		Metrics: Metrics{
 			Id:       id,
+			Time:     started,
 			Location: strconv.Itoa(location),
 			Latency:  float64(latency) / 1000.0,
 			Valid:    strconv.Itoa(valid),
@@ -46,7 +48,7 @@ func NewResultHttpDetails(id string, location int, latency int64, valid int, htt
 	}
 }
 
-func (r *MetricsHttp) GetMetrics() prometheus.Collector {
+func (m *MetricsHttp) GetMetrics() prometheus.Collector {
 	completionTime := prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "sheepdog_runner",
 		Name:      "request_duration_seconds",
@@ -55,9 +57,13 @@ func (r *MetricsHttp) GetMetrics() prometheus.Collector {
 	}, []string{"method", "status", "location"})
 
 	completionTime.With(prometheus.Labels{
-		"method":   r.HttpMethod,
-		"status":   r.StatusCode,
-		"location": r.Location,
-	}).Observe(r.Latency)
+		"method":   m.HttpMethod,
+		"status":   m.StatusCode,
+		"location": m.Location,
+	}).Observe(m.Latency)
 	return completionTime
+}
+
+func (m *MetricsHttp) GetTime() time.Time {
+	return m.Time
 }

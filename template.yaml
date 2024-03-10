@@ -41,7 +41,7 @@ Resources:
           PUSHGATEWAY: ""
 Outputs:
   Runner:
-    Description: First Lambda Function ARN
+    Description: Lambda Function ARN
     Value: !GetAtt Runner.Arn
   RunnerFunctionIamRole:
     Description: Implicit IAM Role created for runner function

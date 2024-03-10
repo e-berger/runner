@@ -89,6 +89,7 @@ func (t *httpProbe) Launch() (metrics.IMetrics, error) {
 	result := metrics.NewResultHttpDetails(
 		t.Id,
 		int(t.Location),
+		time_start,
 		time.Since(time_start).Milliseconds(),
 		1,
 		t.HttpMethod,

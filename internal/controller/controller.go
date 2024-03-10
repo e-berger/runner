@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
@@ -71,7 +72,7 @@ func (c *Controller) runProbe(probe probes.IProbe, wg *sync.WaitGroup, monitorEr
 		}
 	}
 	if c.queueMessaging != nil {
-		errStatus := c.UpdateProbeStatus(probe, err)
+		errStatus := c.UpdateProbeStatus(probe, result.GetTime(), err)
 		if errStatus != nil {
 			slog.Error("Error publishing status", "error", errStatus)
 		}
@@ -92,12 +93,17 @@ func (c *Controller) SendMetrics(metrics metrics.IMetrics) error {
 	return err
 }
 
-func (c *Controller) UpdateProbeStatus(probe probes.IProbe, err error) error {
+func (c *Controller) UpdateProbeStatus(probe probes.IProbe, started time.Time, err error) error {
 	//detect if probe status has changed
 	if (err != nil && !probe.GetError()) || (err == nil && probe.GetError()) {
 		slog.Info("Update status : needed", "probe", probe.GetError(), "error", err)
-		status := status.NewStatus(probe.GetId(), "status", !probe.GetError())
-		return c.queueMessaging.Publish(c.ctx, status)
+		var s *status.Status
+		if err != nil {
+			s = status.NewStatus(started, probe.GetId(), status.ERROR, err.Error())
+		} else {
+			s = status.NewStatus(started, probe.GetId(), status.UP, "")
+		}
+		return c.queueMessaging.Publish(c.ctx, s)
 	}
 	slog.Info("Update status : not needed", "probe", probe.GetError(), "error", err)
 	return nil

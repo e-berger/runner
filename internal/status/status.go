@@ -1,15 +1,19 @@
 package status
 
+import "time"
+
 type Status struct {
-	ProbeId string `json:"probe_id"`
-	Status  string `json:"status"`
-	Error   bool   `json:"error"`
+	Time    time.Time `json:"time"`
+	ProbeId string    `json:"probe_id"`
+	Status  State     `json:"status"`
+	Details string    `json:"details"`
 }
 
-func NewStatus(probeId string, status string, error bool) *Status {
+func NewStatus(started time.Time, probeId string, status State, details string) *Status {
 	return &Status{
+		Time:    started,
 		ProbeId: probeId,
 		Status:  status,
-		Error:   error,
+		Details: details,
 	}
 }
