@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/e-berger/sheepdog-runner/internal/infra"
 	"github.com/e-berger/sheepdog-runner/internal/infra/messaging"
 	"github.com/e-berger/sheepdog-runner/internal/metrics"
 	"github.com/e-berger/sheepdog-runner/internal/probes"
@@ -29,12 +29,11 @@ func NewController(ctx context.Context, pushGateway string, sqsQueueName string)
 	var clientSqs = &sqs.Client{}
 	var m *messaging.Messaging
 	if sqsQueueName != "" {
-		cfg, err := config.LoadDefaultConfig(context.TODO())
+		cfg, err := infra.NewSession()
 		if err != nil {
-			slog.Error("Error loading configuration:", err)
 			return nil, err
 		}
-		clientSqs = sqs.NewFromConfig(cfg)
+		clientSqs = sqs.NewFromConfig(*cfg)
 		m = messaging.NewMessaging(clientSqs, sqsQueueName)
 		m.Start(ctx)
 	}
