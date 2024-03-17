@@ -26,14 +26,14 @@ func NewController(ctx context.Context, pushGateway string, sqsQueueName string)
 		p = metrics.NewPush(pushGateway)
 	}
 
-	var clientSqs = &sqs.Client{}
 	var m *messaging.Messaging
 	if sqsQueueName != "" {
+		slog.Info("Using messaging", "queue", sqsQueueName)
 		cfg, err := infra.NewSession()
 		if err != nil {
 			return nil, err
 		}
-		clientSqs = sqs.NewFromConfig(*cfg)
+		clientSqs := sqs.NewFromConfig(*cfg)
 		m = messaging.NewMessaging(clientSqs, sqsQueueName)
 		m.Start(ctx)
 	}
@@ -94,16 +94,16 @@ func (c *Controller) SendMetrics(metrics metrics.IMetrics) error {
 
 func (c *Controller) UpdateProbeStatus(probe probes.IProbe, started time.Time, err error) error {
 	//detect if probe status has changed
-	if (err != nil && !probe.GetError()) || (err == nil && probe.GetError()) {
-		slog.Info("Update status : needed", "probe", probe.GetError(), "error", err)
+	if err != nil || (err == nil && probe.IsError()) {
+		slog.Info("Update status : needed", "probe", probe.IsError(), "error", err)
 		var s *status.Status
 		if err != nil {
-			s = status.NewStatus(started, probe.GetId(), status.ERROR, err.Error())
+			s = status.NewStatus(started, probe.GetId(), probes.ERROR, err.Error(), probe.GetMode())
 		} else {
-			s = status.NewStatus(started, probe.GetId(), status.UP, "")
+			s = status.NewStatus(started, probe.GetId(), probes.UP, "", probe.GetMode())
 		}
 		return c.queueMessaging.Publish(c.ctx, s)
 	}
-	slog.Info("Update status : not needed", "probe", probe.GetError(), "error", err)
+	slog.Info("Update status : not needed", "probe", probe.IsError(), "error", err)
 	return nil
 }

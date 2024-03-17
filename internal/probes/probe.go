@@ -11,7 +11,8 @@ import (
 type IProbe interface {
 	GetType() ProbeType
 	GetId() string
-	GetError() bool
+	GetMode() Mode
+	IsError() bool
 	Launch() (metrics.IMetrics, error)
 	String() string
 }
@@ -33,15 +34,21 @@ type Probe struct {
 	Id       string          `json:"id"`
 	Type     ProbeType       `json:"type"`
 	Location Location        `json:"location,omitempty"`
+	Mode     Mode            `json:"mode,omitempty"`
 	Data     json.RawMessage `json:"info"`
-	Error    bool            `json:"error"`
+	State    State           `json:"state"`
 }
 
-func UnmarshalJSON(data []byte, location string) (*Probe, error) {
+func UnmarshalJSON(data []byte, location string, mode string) (*Probe, error) {
 	probe := &Probe{}
 	slog.Info("test", "data", string(data))
 	err := json.Unmarshal(data, probe)
 	if err != nil {
+		return nil, err
+	}
+	probe.Mode, err = ParseMode(mode)
+	if err != nil {
+		slog.Error("Error parsing mode", "mode", mode)
 		return nil, err
 	}
 	probe.Location, err = ParseLocation(location)
@@ -49,7 +56,6 @@ func UnmarshalJSON(data []byte, location string) (*Probe, error) {
 		slog.Error("Error parsing location", "location", location)
 		return nil, err
 	}
-	slog.Info("test", "probe", probe)
 	return probe, nil
 }
 
@@ -61,4 +67,20 @@ func (p *Probe) CreateProbeFromType() (IProbe, error) {
 		return NewTcpProbe(p)
 	}
 	return nil, fmt.Errorf("probe type %d not found", p.Type)
+}
+
+func (p *Probe) IsError() bool {
+	return p.State == ERROR
+}
+
+func (p *Probe) GetType() ProbeType {
+	return p.Type
+}
+
+func (p *Probe) GetId() string {
+	return p.Id
+}
+
+func (p *Probe) GetMode() Mode {
+	return p.Mode
 }

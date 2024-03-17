@@ -1,19 +1,25 @@
 package status
 
-import "time"
+import (
+	"time"
+
+	"github.com/e-berger/sheepdog-runner/internal/probes"
+)
 
 type Status struct {
-	Time    time.Time `json:"time"`
-	ProbeId string    `json:"probe_id"`
-	Status  State     `json:"status"`
-	Details string    `json:"details"`
+	Time    time.Time    `json:"time"`
+	ProbeId string       `json:"probe_id"`
+	State   probes.State `json:"status"`
+	Details string       `json:"details"`
+	Mode    probes.Mode  `json:"mode"`
 }
 
-func NewStatus(started time.Time, probeId string, status State, details string) *Status {
+func NewStatus(started time.Time, probeId string, state probes.State, details string, mode probes.Mode) *Status {
 	return &Status{
 		Time:    started,
 		ProbeId: probeId,
-		Status:  status,
+		State:   state,
 		Details: details,
+		Mode:    mode,
 	}
 }

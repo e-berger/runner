@@ -15,15 +15,20 @@ var c *controller.Controller
 var err error
 var ctx = context.Background()
 
+const (
+	PUSHGATEWAY  string = "PUSHGATEWAY"
+	SQSQUEUENAME string = "SQS_QUEUE_NAME"
+)
+
 func init() {
 	logger.SetupLog()
 
-	pushgateway := os.Getenv("PUSHGATEWAY")
+	pushgateway := os.Getenv(PUSHGATEWAY)
 	if pushgateway == "" {
 		slog.Info("PUSHGATEWAY not set, metrics will not be pushed")
 	}
 
-	sqsQueueName := os.Getenv("SQS_QUEUE_NAME")
+	sqsQueueName := os.Getenv(SQSQUEUENAME)
 	c, err = controller.NewController(ctx, pushgateway, sqsQueueName)
 	if err != nil {
 		slog.Error("Creating controller", "error", err)

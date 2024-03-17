@@ -16,21 +16,9 @@ func NewTcpProbe(p *Probe) (IProbe, error) {
 			Id:       p.Id,
 			Type:     PING,
 			Location: p.Location,
-			Error:    p.Error,
+			State:    p.State,
 		},
 	}, nil
-}
-
-func (t *tcpProbe) GetType() ProbeType {
-	return t.Type
-}
-
-func (t *tcpProbe) GetId() string {
-	return t.Id
-}
-
-func (t *tcpProbe) GetError() bool {
-	return t.Error
 }
 
 func (t *tcpProbe) Launch() (metrics.IMetrics, error) {
@@ -52,4 +40,8 @@ func (t *tcpProbe) Launch() (metrics.IMetrics, error) {
 
 func (t *tcpProbe) String() string {
 	return fmt.Sprintf("tcp probe %s", t.Id)
+}
+
+func (t *tcpProbe) IsError() bool {
+	return false
 }

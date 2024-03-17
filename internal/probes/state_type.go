@@ -1,11 +1,11 @@
-package status
+package probes
 
 import "fmt"
 
 type State uint
 
 const (
-	UNKNOWNLOCATION State = iota
+	UNKNOWNSTATE State = iota
 	UP
 	ERROR
 )
@@ -32,7 +32,9 @@ func ParseState(state string) (State, error) {
 		return UP, nil
 	case ErrorString:
 		return ERROR, nil
+	case "":
+		return UP, nil
 	default:
-		return UNKNOWNLOCATION, fmt.Errorf("unknown state: %s", state)
+		return UNKNOWNSTATE, fmt.Errorf("unknown state: %s", state)
 	}
 }

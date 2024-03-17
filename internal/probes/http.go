@@ -42,7 +42,7 @@ func NewHttpProbe(p *Probe) (IProbe, error) {
 			Id:       p.Id,
 			Type:     HTTP,
 			Location: p.Location,
-			Error:    p.Error,
+			State:    p.State,
 		},
 		httpProbeData: httpProbeData{
 			HttpMethod:      d.HttpMethod,
@@ -110,6 +110,6 @@ func (p *httpProbe) GetId() string {
 	return p.Id
 }
 
-func (p *httpProbe) GetError() bool {
-	return p.Error
+func (p *httpProbe) IsError() bool {
+	return p.State == ERROR
 }

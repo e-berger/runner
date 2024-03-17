@@ -14,7 +14,7 @@ import (
 const (
 	MESSAGINGTAGKEY   string = "test"
 	MESSAGINGTAGVALUE string = "test"
-	DEFAULTQUEUENAME  string = "test"
+	DEFAULTQUEUENAME  string = "events"
 )
 
 var (
@@ -62,8 +62,8 @@ func (m *Messaging) createMessaging(ctx context.Context) error {
 	response, err := m.sqsClient.CreateQueue(ctx, &sqs.CreateQueueInput{
 		QueueName: aws.String(m.queueName),
 		Tags: map[string]string{
-			"Key":   MESSAGINGTAGKEY,
-			"Value": MESSAGINGTAGVALUE,
+			"ApplicatonID":  MESSAGINGTAGVALUE,
+			MESSAGINGTAGKEY: MESSAGINGTAGVALUE,
 		},
 	})
 	if err != nil {

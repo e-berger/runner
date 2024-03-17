@@ -12,6 +12,7 @@ import (
 type EventProbes struct {
 	Location string            `json:"location"`
 	Items    []json.RawMessage `json:"items"`
+	Mode     string            `json:"mode,"`
 }
 
 func CloudWatchEventHandler(c *controller.Controller, cloudWatchEvent events.CloudWatchEvent) (Response, error) {
@@ -24,7 +25,7 @@ func CloudWatchEventHandler(c *controller.Controller, cloudWatchEvent events.Clo
 	}
 	var probeDatas []probes.IProbe
 	for _, item := range event.Items {
-		probe, err := probes.UnmarshalJSON(item, event.Location)
+		probe, err := probes.UnmarshalJSON(item, event.Location, event.Mode)
 		if err != nil {
 			return response, err
 		}
