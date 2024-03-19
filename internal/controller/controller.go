@@ -75,6 +75,8 @@ func (c *Controller) runProbe(probe probes.IProbe, wg *sync.WaitGroup, monitorEr
 		if errStatus != nil {
 			slog.Error("Error publishing status", "error", errStatus)
 		}
+	} else {
+		slog.Info("No queue messaging defined")
 	}
 }
 

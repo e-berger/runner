@@ -24,6 +24,6 @@ func (e Event) Handler(c *controller.Controller) (Response, error) {
 	case len(e.CloudWatchEvent.Detail) > 0:
 		return CloudWatchEventHandler(c, e.CloudWatchEvent)
 	default:
-		return DefaultEventHandler(c)
+		return DefaultEventHandler(c, e)
 	}
 }

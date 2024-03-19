@@ -41,7 +41,6 @@ type Probe struct {
 
 func UnmarshalJSON(data []byte, location string, mode string) (*Probe, error) {
 	probe := &Probe{}
-	slog.Info("test", "data", string(data))
 	err := json.Unmarshal(data, probe)
 	if err != nil {
 		return nil, err

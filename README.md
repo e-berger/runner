@@ -27,13 +27,21 @@ Another way is to setup a file `.env.local.json` with this format
 goreleaser release --snapshot --clean
 ```
 
-## lauch local sam
+## launch local sam
 
 lambda runner will be available at `http://localhost:3000/runner`
 
 ```bash
 make sam-local
 ```
+## launch localstack & send event with content of inputs.txt
+
+```bash
+make localstack
+make call
+make log # to follow lambda logs
+```
+
 
 
 

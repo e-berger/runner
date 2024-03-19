@@ -1,0 +1,39 @@
+{
+    "version": "0",
+    "id": "4147347c-3708-9dc1-dedf-af5084239c08",
+    "detail-type": "probes",
+    "source": "sheepdog-dispatcher",
+    "account": "862962005596",
+    "time": "2024-03-19T19:14:41Z",
+    "region": "eu-central-1",
+    "resources": [],
+    "detail": {
+        "location": "europe",
+        "items": [
+            {
+                "id": "2dJEbnGYBJYNSv4ureovwjkf6j5",
+                "info": {
+                    "timeout": 10000000000,
+                    "method": "GET",
+                    "url": "https://limitation-service-api.eu.finalcad.cloud/healthz/live",
+                    "expected_status_code": [
+                        200
+                    ]
+                },
+                "type": 2
+            },
+            {
+                "id": "2dJEdC4ln2DvZAEz4V3l1RaUXYd",
+                "info": {
+                    "timeout": 10000000000,
+                    "method": "GET",
+                    "url": "https://observations-service-api.eu.finalcad.cloud/healthz/live",
+                    "expected_status_code": [
+                        200
+                    ]
+                },
+                "type": 2
+            }
+        ]
+    }
+}
