@@ -8,13 +8,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/e-berger/sheepdog-runner/internal/status"
 )
 
 const (
 	MESSAGINGTAGKEY   string = "test"
 	MESSAGINGTAGVALUE string = "test"
-	DEFAULTQUEUENAME  string = "events"
+	DEFAULTQUEUENAME  string = "Events"
 )
 
 var (
@@ -43,6 +44,7 @@ func (m *Messaging) getMessagingInfo(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
+
 			for key, tag := range output.Tags {
 				if key == MESSAGINGTAGKEY && tag == MESSAGINGTAGVALUE {
 					m.queueUrl = queueUrl
@@ -80,10 +82,24 @@ func (m *Messaging) Publish(ctx context.Context, content *status.Status) error {
 	if err != nil {
 		return err
 	}
-	messageBody := string(contentJSON)
+	slog.Info("Publishing message", "content", string(contentJSON), "queueUrl", m.queueUrl)
 	_, err = m.sqsClient.SendMessage(ctx, &sqs.SendMessageInput{
 		QueueUrl:    &m.queueUrl,
-		MessageBody: &messageBody,
+		MessageBody: aws.String(string(contentJSON)),
+		MessageAttributes: map[string]types.MessageAttributeValue{
+			"probeid": {
+				DataType:    aws.String("String"),
+				StringValue: aws.String(content.ProbeId),
+			},
+			"timestamp": {
+				DataType:    aws.String("String"),
+				StringValue: aws.String(content.Time.String()),
+			},
+			"mode": {
+				DataType:    aws.String("String"),
+				StringValue: aws.String(content.Mode.String()),
+			},
+		},
 	})
 	if err != nil {
 		return err

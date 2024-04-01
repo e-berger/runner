@@ -2,20 +2,27 @@
 lambda_name = sheepdog-runner
 endpoint = http://localhost:4566
 
+statuslocalhost = $(shell curl --write-out %{http_code} --silent --output /dev/null ${endpoint})
+time = $(shell date --iso=seconds)
+
 build:
 	goreleaser release --snapshot --clean
 
 localstack: build
-	docker-compose up -d
+	@if [ "$(statuslocalhost)" != "200" ]; then\
+		docker-compose up -d;\
+	fi
 	aws --endpoint-url $(endpoint) lambda delete-function --function-name $(lambda_name) || true
 	aws --endpoint-url=$(endpoint) \
 	lambda create-function --function-name $(lambda_name) \
 	--zip-file fileb://dist/$(lambda_name)_Linux_x86_64.zip \
 	--handler bootstrap --runtime go1.x \
 	--role arn:aws:iam::000000000000:role/lambda-role \
-	--environment Variables="{SQS_QUEUE_NAME=events}" | jq
+	--timeout 900 \
+	--description "$(time)" \
+	--environment Variables="{SQS_QUEUE_NAME=Events}" | jq
 
-log:
+logs:
 	aws --endpoint-url=http://localhost:4566 logs tail "/aws/lambda/$(lambda_name)" --follow
 
 sam-local:

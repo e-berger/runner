@@ -5,9 +5,9 @@ import "fmt"
 type State uint
 
 const (
-	UNKNOWNSTATE State = iota
-	UP
-	ERROR
+	UNKNOWNSTATE State = 0
+	UP           State = 200
+	ERROR        State = 400
 )
 
 const (

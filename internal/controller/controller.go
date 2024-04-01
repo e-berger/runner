@@ -35,7 +35,9 @@ func NewController(ctx context.Context, pushGateway string, sqsQueueName string)
 		}
 		clientSqs := sqs.NewFromConfig(*cfg)
 		m = messaging.NewMessaging(clientSqs, sqsQueueName)
-		m.Start(ctx)
+		if err := m.Start(ctx); err != nil {
+			return nil, err
+		}
 	}
 
 	return &Controller{
@@ -58,20 +60,23 @@ func (c *Controller) Run(probesDatas []probes.IProbe) {
 
 func (c *Controller) runProbe(probe probes.IProbe, wg *sync.WaitGroup, monitorErr *int) {
 	slog.Info("Launching monitoring", "probe", probe.String())
+
 	defer wg.Done()
-	result, err := probe.Launch()
-	if err != nil {
+	// Launch the probe
+	result, errProbe := probe.Launch()
+	if errProbe != nil {
 		*monitorErr++
-		slog.Error("Error launching monitoring", "error", err)
 	} else {
-		err = c.SendMetrics(result)
+		// Push metrics to PushGateway
+		err := c.SendMetrics(result)
 		if err != nil {
 			*monitorErr++
 			slog.Error("Error pushing monitoring", "error", err)
 		}
 	}
+	// Find out if we need to send an update for status
 	if c.queueMessaging != nil {
-		errStatus := c.UpdateProbeStatus(probe, result.GetTime(), err)
+		errStatus := c.UpdateProbeStatus(probe, result.GetTime(), errProbe)
 		if errStatus != nil {
 			slog.Error("Error publishing status", "error", errStatus)
 		}
@@ -95,9 +100,9 @@ func (c *Controller) SendMetrics(metrics metrics.IMetrics) error {
 }
 
 func (c *Controller) UpdateProbeStatus(probe probes.IProbe, started time.Time, err error) error {
-	//detect if probe status has changed
+	// Detect if probe status has changed
 	if err != nil || (err == nil && probe.IsError()) {
-		slog.Info("Update status : needed", "probe", probe.IsError(), "error", err)
+		slog.Info("Update status: true", "probe", probe.GetId(), "status", probe.IsError(), "error", err)
 		var s *status.Status
 		if err != nil {
 			s = status.NewStatus(started, probe.GetId(), probes.ERROR, err.Error(), probe.GetMode())
@@ -106,6 +111,6 @@ func (c *Controller) UpdateProbeStatus(probe probes.IProbe, started time.Time, e
 		}
 		return c.queueMessaging.Publish(c.ctx, s)
 	}
-	slog.Info("Update status : not needed", "probe", probe.IsError(), "error", err)
+	slog.Info("Update status: false", "probe", probe.GetId(), "status", "error", err)
 	return nil
 }

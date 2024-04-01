@@ -29,6 +29,9 @@ func init() {
 	}
 
 	sqsQueueName := os.Getenv(SQSQUEUENAME)
+	if sqsQueueName == "" {
+		slog.Info("SQS_QUEUE_NAME not set, status will not be pushed")
+	}
 	c, err = controller.NewController(ctx, pushgateway, sqsQueueName)
 	if err != nil {
 		slog.Error("Creating controller", "error", err)

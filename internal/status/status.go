@@ -15,6 +15,9 @@ type Status struct {
 }
 
 func NewStatus(started time.Time, probeId string, state probes.State, details string, mode probes.Mode) *Status {
+	if mode == probes.UNKNOWNMODE {
+		mode = probes.CRON
+	}
 	return &Status{
 		Time:    started,
 		ProbeId: probeId,
