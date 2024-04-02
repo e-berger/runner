@@ -38,3 +38,12 @@ func ParseState(state string) (State, error) {
 		return UNKNOWNSTATE, fmt.Errorf("unknown state: %s", state)
 	}
 }
+
+func (s *State) UnmarshalJSON(data []byte) error {
+	state, err := ParseState(string(data))
+	if err != nil {
+		return err
+	}
+	*s = state
+	return nil
+}

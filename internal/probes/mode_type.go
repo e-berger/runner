@@ -26,7 +26,7 @@ func (m Mode) String() string {
 	}
 }
 
-// ParseMode parses a mode string into a Moe
+// ParseMode parses a mode string into a Mode
 func ParseMode(mode string) (Mode, error) {
 	switch mode {
 	case CronString:
@@ -37,4 +37,13 @@ func ParseMode(mode string) (Mode, error) {
 		return CRON, nil
 	}
 	return UNKNOWNMODE, fmt.Errorf("unknown mode: %s", mode)
+}
+
+func (m *Mode) UnmarshalJSON(data []byte) error {
+	mode, err := ParseMode(string(data))
+	if err != nil {
+		return err
+	}
+	*m = mode
+	return nil
 }

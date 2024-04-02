@@ -102,15 +102,16 @@ func (c *Controller) SendMetrics(metrics metrics.IMetrics) error {
 func (c *Controller) UpdateProbeStatus(probe probes.IProbe, started time.Time, err error) error {
 	// Detect if probe status has changed
 	if err != nil || (err == nil && probe.IsError()) {
-		slog.Info("Update status: true", "probe", probe.GetId(), "status", probe.IsError(), "error", err)
+		slog.Info("Update status", "probe", probe.GetId(), "current error", probe.IsError(), "new error", err)
 		var s *status.Status
 		if err != nil {
-			s = status.NewStatus(started, probe.GetId(), probes.ERROR, err.Error(), probe.GetMode())
+			s = status.NewStatus(started, probe.GetId(), probes.ERROR, err.Error(), probe.GetMode(), probe.GetLocation())
 		} else {
-			s = status.NewStatus(started, probe.GetId(), probes.UP, "", probe.GetMode())
+			s = status.NewStatus(started, probe.GetId(), probes.UP, "", probe.GetMode(), probe.GetLocation())
 		}
 		return c.queueMessaging.Publish(c.ctx, s)
+	} else {
+		slog.Debug("No status update", "probe", probe.GetId(), "current error", probe.IsError())
 	}
-	slog.Info("Update status: false", "probe", probe.GetId(), "status", "error", err)
 	return nil
 }

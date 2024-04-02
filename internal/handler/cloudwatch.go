@@ -12,7 +12,7 @@ import (
 type EventProbes struct {
 	Location string            `json:"location"`
 	Items    []json.RawMessage `json:"items"`
-	Mode     string            `json:"mode,"`
+	Mode     string            `json:"mode"`
 }
 
 func CloudWatchEventHandler(c *controller.Controller, cloudWatchEvent events.CloudWatchEvent) (Response, error) {

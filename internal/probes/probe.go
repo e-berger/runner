@@ -11,24 +11,12 @@ import (
 type IProbe interface {
 	GetType() ProbeType
 	GetId() string
+	GetLocation() Location
 	GetMode() Mode
 	IsError() bool
 	Launch() (metrics.IMetrics, error)
 	String() string
 }
-
-// {
-// 	"id": "2d2f35Ry74DX9F9piVm4FWUuz3b",
-// 	"info": {
-// 		"timeout": 10000000000,
-// 		"method": "GET",
-// 		"url": "https://observations-service-api.eu.finalcad.cloud/healthz/live",
-// 		"expected_status_code": [
-// 			200
-// 		]
-// 	},
-// 	"type": 2
-// }
 
 type Probe struct {
 	Id       string          `json:"id"`
@@ -82,4 +70,8 @@ func (p *Probe) GetId() string {
 
 func (p *Probe) GetMode() Mode {
 	return p.Mode
+}
+
+func (p *Probe) GetLocation() Location {
+	return p.Location
 }
