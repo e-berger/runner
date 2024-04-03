@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	"github.com/e-berger/sheepdog-runner/internal/status"
+	"github.com/e-berger/sheepdog-domain/status"
 )
 
 const (
@@ -77,8 +77,8 @@ func (m *Messaging) createMessaging(ctx context.Context) error {
 	return nil
 }
 
-func (m *Messaging) Publish(ctx context.Context, content *status.Status) error {
-	contentJSON, err := json.Marshal(content)
+func (m *Messaging) Publish(ctx context.Context, content status.StatusJSON) error {
+	contentJSON, err := json.Marshal(&content)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (m *Messaging) Publish(ctx context.Context, content *status.Status) error {
 		MessageAttributes: map[string]types.MessageAttributeValue{
 			"probeid": {
 				DataType:    aws.String("String"),
-				StringValue: aws.String(content.ProbeId),
+				StringValue: aws.String(content.ProbeID),
 			},
 			"timestamp": {
 				DataType:    aws.String("String"),
@@ -97,7 +97,7 @@ func (m *Messaging) Publish(ctx context.Context, content *status.Status) error {
 			},
 			"mode": {
 				DataType:    aws.String("String"),
-				StringValue: aws.String(content.Mode.String()),
+				StringValue: aws.String(content.Mode),
 			},
 		},
 	})

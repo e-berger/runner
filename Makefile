@@ -9,6 +9,7 @@ build:
 	goreleaser release --snapshot --clean
 
 localstack: build
+	go env -w GOPRIVATE='github.com/e-berger/*'
 	@if [ "$(statuslocalhost)" != "200" ]; then\
 		docker-compose up -d;\
 	fi
@@ -20,7 +21,7 @@ localstack: build
 	--role arn:aws:iam::000000000000:role/lambda-role \
 	--timeout 900 \
 	--description "$(time)" \
-	--environment Variables="{SQS_QUEUE_NAME=Events}" | jq
+	--environment Variables="{SQS_QUEUE_NAME=Events,LOGLEVEL=debug}" | jq
 
 logs:
 	aws --endpoint-url=http://localhost:4566 logs tail "/aws/lambda/$(lambda_name)" --follow

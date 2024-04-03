@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/aws/aws-lambda-go/events"
+	domain "github.com/e-berger/sheepdog-domain/probes"
 	"github.com/e-berger/sheepdog-runner/internal/controller"
 	"github.com/e-berger/sheepdog-runner/internal/probes"
 )
@@ -15,26 +16,40 @@ type EventProbes struct {
 	Mode     string            `json:"mode"`
 }
 
-func CloudWatchEventHandler(c *controller.Controller, cloudWatchEvent events.CloudWatchEvent) (Response, error) {
-	slog.Info("CloudWatch Event", "event", cloudWatchEvent)
-	var response = Response{}
+func CloudWatchEventHandler(c *controller.Controller, cloudWatchEvent events.CloudWatchEvent) error {
+	slog.Debug("CloudWatch Event", "event", cloudWatchEvent)
 	var event EventProbes
-	err := json.Unmarshal(cloudWatchEvent.Detail, &event)
+	if err := json.Unmarshal(cloudWatchEvent.Detail, &event); err != nil {
+		return err
+	}
+
+	location, err := domain.ParseLocation(event.Location)
 	if err != nil {
-		return response, err
+		return err
 	}
-	var probeDatas []probes.IProbe
+
+	mode, err := domain.ParseMode(event.Mode)
+	if err != nil {
+		return err
+	}
+
+	probeList := probes.Probes{
+		Location: location,
+		Mode:     mode,
+	}
+
 	for _, item := range event.Items {
-		probe, err := probes.UnmarshalJSON(item, event.Location, event.Mode)
+		probeJSON := &probes.ProbeJSON{}
+		err := json.Unmarshal(item, probeJSON)
 		if err != nil {
-			return response, err
+			return err
 		}
-		p, err := probe.CreateProbeFromType()
+		probe, err := probes.NewProbeFromJSON(*probeJSON, event.Location)
 		if err != nil {
-			return response, err
+			return err
 		}
-		probeDatas = append(probeDatas, p)
+		probeList.Probes = append(probeList.Probes, probe)
 	}
-	c.Run(probeDatas)
-	return response, nil
+	c.Run(probeList)
+	return nil
 }

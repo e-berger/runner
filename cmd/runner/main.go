@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/e-berger/sheepdog-runner/internal/controller"
 	"github.com/e-berger/sheepdog-runner/internal/handler"
@@ -32,6 +33,7 @@ func init() {
 	if sqsQueueName == "" {
 		slog.Info("SQS_QUEUE_NAME not set, status will not be pushed")
 	}
+
 	c, err = controller.NewController(ctx, pushgateway, sqsQueueName)
 	if err != nil {
 		slog.Error("Creating controller", "error", err)
@@ -39,7 +41,7 @@ func init() {
 	}
 }
 
-func mainHandler(_ context.Context, event handler.Event) (handler.Response, error) {
+func mainHandler(_ context.Context, event handler.Event) (*events.APIGatewayProxyResponse, error) {
 	return event.Handler(c)
 }
 
