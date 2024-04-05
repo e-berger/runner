@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	domain "github.com/e-berger/sheepdog-domain/probes"
 	"github.com/e-berger/sheepdog-domain/status"
+	"github.com/e-berger/sheepdog-domain/types"
 	"github.com/e-berger/sheepdog-runner/internal/infra"
 	"github.com/e-berger/sheepdog-runner/internal/infra/messaging"
 	"github.com/e-berger/sheepdog-runner/internal/metrics"
@@ -84,27 +84,26 @@ func (c *Controller) Run(probesList probes.Probes) {
 }
 
 func (c *Controller) SendMetrics(metrics metrics.IMetrics) error {
-	var err error
 	if c.pushGateway != nil {
 		slog.Info("Metrics monitoring", "probe", metrics.String())
-		err = c.pushGateway.Send(metrics.GetId(), metrics.GetMetrics())
-		if err != nil {
+		if err := c.pushGateway.Send(metrics.GetId(), metrics.GetMetrics()); err != nil {
 			slog.Error("Error pushing monitoring", "error", err)
+			return err
 		}
 	} else {
 		slog.Info("No push gateway defined")
 	}
-	return err
+	return nil
 }
 
-func (c *Controller) UpdateProbeStatus(probe probes.IProbe, location domain.Location, mode domain.Mode, started time.Time, err error) error {
+func (c *Controller) UpdateProbeStatus(probe probes.IProbe, location types.Location, mode types.Mode, started time.Time, err error) error {
 	if err != nil || probe.IsInError() {
 		slog.Info("Update status", "probe", probe.GetId(), "current error", probe.IsInError(), "new error", err)
 		var s status.StatusJSON
 		if err != nil {
-			s = status.NewStatusJSON(started, probe.GetId(), uint(domain.ERROR), err.Error(), uint(mode), uint(location))
+			s = status.NewStatusJSON(started, probe.GetId(), uint(types.ERROR), err.Error(), uint(mode), uint(location))
 		} else {
-			s = status.NewStatusJSON(started, probe.GetId(), uint(domain.UP), "", uint(mode), uint(location))
+			s = status.NewStatusJSON(started, probe.GetId(), uint(types.UP), "", uint(mode), uint(location))
 		}
 		return c.queueMessaging.Publish(c.ctx, s)
 	} else {

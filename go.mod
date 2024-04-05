@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.10
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.10
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.31.4
-	github.com/e-berger/sheepdog-domain v0.0.10
+	github.com/e-berger/sheepdog-domain v0.0.12
 	github.com/prometheus/client_golang v1.19.0
 )
 

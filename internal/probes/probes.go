@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	domain "github.com/e-berger/sheepdog-domain/probes"
+	"github.com/e-berger/sheepdog-domain/types"
 	"github.com/e-berger/sheepdog-runner/internal/metrics"
 )
 
@@ -26,39 +27,39 @@ type ProbeJSON struct {
 }
 
 type Probes struct {
-	Location domain.Location `json:"location"`
-	Probes   []IProbe        `json:"items"`
-	Mode     domain.Mode     `json:"mode"`
+	Location types.Location `json:"location"`
+	Probes   []IProbe       `json:"items"`
+	Mode     types.Mode     `json:"mode"`
 }
 
 func NewProbeFromJSON(probeJSON ProbeJSON, location string) (IProbe, error) {
 
-	loc, err := domain.ParseLocation(location)
+	loc, err := types.ParseLocation(location)
 	if err != nil {
 		return nil, err
 	}
-	locs, err := domain.ParseLocations([]string{location})
+	locs, err := types.ParseLocations([]string{location})
 	if err != nil {
 		return nil, err
 	}
 
-	switch domain.ProbeType(probeJSON.Type) {
-	case domain.HttpProbeType:
+	switch types.ProbeType(probeJSON.Type) {
+	case types.HttpProbeType:
 		httpInfo, err := domain.NewHttpProbeInfoFromJson([]byte(probeJSON.Info))
 		if err != nil {
 			return nil, err
 		}
-		probe, err := domain.NewProbeHttp(probeJSON.Id, domain.DefaultInterval, locs, false, httpInfo)
+		probe, err := domain.NewProbeHttp(probeJSON.Id, types.DefaultInterval, locs, false, httpInfo)
 		if err != nil {
 			return nil, err
 		}
 		return NewHttpProbe(probe, loc)
-	case domain.PingProbeType:
+	case types.PingProbeType:
 		pingInfo, err := domain.NewPingProbeInfoFromJson([]byte(probeJSON.Info))
 		if err != nil {
 			return nil, err
 		}
-		probe, err := domain.NewProbePing(probeJSON.Id, domain.DefaultInterval, locs, false, pingInfo)
+		probe, err := domain.NewProbePing(probeJSON.Id, types.DefaultInterval, locs, false, pingInfo)
 		if err != nil {
 			return nil, err
 		}

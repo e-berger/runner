@@ -10,15 +10,16 @@ import (
 	"time"
 
 	domain "github.com/e-berger/sheepdog-domain/probes"
+	"github.com/e-berger/sheepdog-domain/types"
 	"github.com/e-berger/sheepdog-runner/internal/metrics"
 )
 
 type httpProbe struct {
 	domain.Probe
-	Location domain.Location
+	Location types.Location
 }
 
-func NewHttpProbe(probe domain.Probe, location domain.Location) (IProbe, error) {
+func NewHttpProbe(probe domain.Probe, location types.Location) (IProbe, error) {
 	return httpProbe{
 		probe,
 		location,

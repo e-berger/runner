@@ -5,12 +5,13 @@ import (
 	"time"
 
 	domain "github.com/e-berger/sheepdog-domain/probes"
+	"github.com/e-berger/sheepdog-domain/types"
 	"github.com/e-berger/sheepdog-runner/internal/metrics"
 )
 
 type pingProbe struct {
 	domain.Probe
-	location domain.Location
+	location types.Location
 }
 
 func (t pingProbe) String() string {
@@ -25,7 +26,7 @@ func (t pingProbe) IsInError() bool {
 	return t.Probe.IsInError()
 }
 
-func NewPingProbe(probe domain.Probe, location domain.Location) (IProbe, error) {
+func NewPingProbe(probe domain.Probe, location types.Location) (IProbe, error) {
 	return pingProbe{
 		probe,
 		location,

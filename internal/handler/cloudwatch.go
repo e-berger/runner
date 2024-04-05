@@ -5,7 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/aws/aws-lambda-go/events"
-	domain "github.com/e-berger/sheepdog-domain/probes"
+	"github.com/e-berger/sheepdog-domain/types"
 	"github.com/e-berger/sheepdog-runner/internal/controller"
 	"github.com/e-berger/sheepdog-runner/internal/probes"
 )
@@ -23,12 +23,12 @@ func CloudWatchEventHandler(c *controller.Controller, cloudWatchEvent events.Clo
 		return err
 	}
 
-	location, err := domain.ParseLocation(event.Location)
+	location, err := types.ParseLocation(event.Location)
 	if err != nil {
 		return err
 	}
 
-	mode, err := domain.ParseMode(event.Mode)
+	mode, err := types.ParseMode(event.Mode)
 	if err != nil {
 		return err
 	}
