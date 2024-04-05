@@ -17,7 +17,7 @@
                     "method": "GET",
                     "url": "https://limitation-service-api.eu.finalcad.cloud/healthz/liveee",
                     "expected_status_code": [
-                        200
+                        "2xx"
                     ]
                 },
                 "type": 2
@@ -29,7 +29,7 @@
                     "method": "GET",
                     "url": "https://observations-service-api.eu.finalcad.cloud/healthz/live",
                     "expected_status_code": [
-                        200
+                        "2xx"
                     ]
                 },
                 "type": 2

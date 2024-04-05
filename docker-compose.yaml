@@ -5,7 +5,7 @@ services:
     environment:
       - DEFAULT_REGION=us-east-1
       - EDGE_PORT=4566
-      - SERVICES=s3,lambda,logs,sqs,sns,dynamodb,apigateway,events
+      - SERVICES=s3,lambda,logs,sqs,sns,dynamodb,apigateway,events,cloudwatch,kms
     ports:
       - '4566-4597:4566-4597'
     volumes:

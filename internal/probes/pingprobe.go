@@ -37,7 +37,7 @@ func (t pingProbe) Launch() (metrics.IMetrics, error) {
 	time_start := time.Now()
 	result := metrics.NewResultHttpDetails(
 		t.GetId(),
-		int(t.location),
+		t.location,
 		time_start,
 		time.Since(time_start).Milliseconds(),
 		DEFAULT_VALID,

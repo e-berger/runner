@@ -1,7 +1,9 @@
 package probes
 
 import (
+	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log/slog"
@@ -44,15 +46,27 @@ func (t httpProbe) Launch() (metrics.IMetrics, error) {
 	if t.GetHttpProbeInfo().FollowRedirects {
 		checkRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
 	}
+
+	// Allow insecure
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: t.GetHttpProbeInfo().AllowInsecure},
+	}
+
 	client := &http.Client{
 		CheckRedirect: checkRedirect,
+		Transport:     tr,
 	}
 
 	// Timeout
 	timeout := time.Duration(t.Probe.GetHttpProbeInfo().Timeout)
-	slog.Debug("Probe timeout", "second", timeout.Seconds())
 
-	req, err := http.NewRequest(t.GetHttpProbeInfo().Method, t.GetHttpProbeInfo().Url, nil)
+	// Body
+	var bodyReader io.Reader
+	if t.GetHttpProbeInfo().Content != "" {
+		bodyReader = bytes.NewReader([]byte(t.GetHttpProbeInfo().Content))
+	}
+
+	req, err := http.NewRequest(t.GetHttpProbeInfo().Method, t.GetHttpProbeInfo().Url, bodyReader)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +92,7 @@ func (t httpProbe) Launch() (metrics.IMetrics, error) {
 
 	result := metrics.NewResultHttpDetails(
 		t.GetId(),
-		int(t.Location),
+		t.Location,
 		time_start,
 		time.Since(time_start).Milliseconds(),
 		DEFAULT_VALID,
@@ -127,17 +141,17 @@ func (t httpProbe) validExpectedContent(body io.ReadCloser) error {
 }
 
 func (t httpProbe) validExpectedStatus(statusCode int) error {
-	slog.Info("Probe status code", "probe", t.GetId(), "status", statusCode, "expected", t.GetHttpProbeInfo().ExpectedStatusCode, "not_expected", t.GetHttpProbeInfo().NotExpectedStatusCode)
-	if len(t.GetHttpProbeInfo().ExpectedStatusCode) > 0 && !matchStatus(t.GetHttpProbeInfo().ExpectedStatusCode, statusCode) {
+	slog.Info("Probe status code", "probe", t.GetId(), "status", statusCode, "expected", t.GetHttpProbeInfo().ExpectedStatusCodes, "not_expected", t.GetHttpProbeInfo().NotExpectedStatusCodes)
+	if len(t.GetHttpProbeInfo().ExpectedStatusCodes) > 0 && !matchStatus(t.GetHttpProbeInfo().ExpectedStatusCodes, statusCode) {
 		return fmt.Errorf("unexpected status code %d", statusCode)
-	} else if len(t.GetHttpProbeInfo().NotExpectedStatusCode) > 0 && matchStatus(t.GetHttpProbeInfo().NotExpectedStatusCode, statusCode) {
+	} else if len(t.GetHttpProbeInfo().NotExpectedStatusCodes) > 0 && matchStatus(t.GetHttpProbeInfo().NotExpectedStatusCodes, statusCode) {
 		return fmt.Errorf("unexpected status code %d", statusCode)
 	}
 	return nil
 }
 
-func matchStatus(s []int, code int) bool {
-	for _, v := range s {
+func matchStatus(s types.HttpStatusCodeFamilies, code int) bool {
+	for _, v := range s.ToHttpStatusCode() {
 		if v == code {
 			return true
 		}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 
@@ -17,24 +18,37 @@ var err error
 var ctx = context.Background()
 
 const (
-	PUSHGATEWAY  string = "PUSHGATEWAY"
-	SQSQUEUENAME string = "SQS_QUEUE_NAME"
+	CLOUDWATCHPREFIX string = "CLOUDWATCHPREFIX"
+	PUSHGATEWAY      string = "PUSHGATEWAY"
+	SQSQUEUENAME     string = "SQS_QUEUE_NAME"
+	AWSREGIONCENTRAL string = "AWS_REGION_CENTRAL"
 )
 
 func init() {
 	logger.SetupLog()
 
-	pushgateway := os.Getenv(PUSHGATEWAY)
-	if pushgateway == "" {
-		slog.Info("PUSHGATEWAY not set, metrics will not be pushed")
+	pushGateway := os.Getenv(PUSHGATEWAY)
+	if pushGateway == "" {
+		slog.Info(fmt.Sprintf("%s not set, metrics will not be pushed to prometheus", PUSHGATEWAY))
+	}
+
+	cloudWatchPrefix := os.Getenv(CLOUDWATCHPREFIX)
+	if cloudWatchPrefix == "" {
+		slog.Info(fmt.Sprintf("%v not set, metrics will not be pushed to cloudwatch", CLOUDWATCHPREFIX))
 	}
 
 	sqsQueueName := os.Getenv(SQSQUEUENAME)
 	if sqsQueueName == "" {
-		slog.Info("SQS_QUEUE_NAME not set, status will not be pushed")
+		slog.Info(fmt.Sprintf("%v not set, status will not be pushed", SQSQUEUENAME))
 	}
 
-	c, err = controller.NewController(ctx, pushgateway, sqsQueueName)
+	region := os.Getenv(AWSREGIONCENTRAL)
+	if region == "" {
+		slog.Error(fmt.Sprintf("%v not set, exiting", AWSREGIONCENTRAL))
+		os.Exit(1)
+	}
+
+	c, err = controller.NewController(ctx, region, pushGateway, sqsQueueName, cloudWatchPrefix)
 	if err != nil {
 		slog.Error("Creating controller", "error", err)
 		os.Exit(1)

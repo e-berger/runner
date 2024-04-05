@@ -6,34 +6,42 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/e-berger/sheepdog-domain/status"
 	"github.com/e-berger/sheepdog-domain/types"
-	"github.com/e-berger/sheepdog-runner/internal/infra"
 	"github.com/e-berger/sheepdog-runner/internal/infra/messaging"
 	"github.com/e-berger/sheepdog-runner/internal/metrics"
 	"github.com/e-berger/sheepdog-runner/internal/probes"
+	"github.com/e-berger/sheepdog-utils/aws/creds"
+	"github.com/e-berger/sheepdog-utils/cfg"
+	"github.com/e-berger/sheepdog-utils/cfg/envs"
 )
 
 type Controller struct {
-	pushGateway    *metrics.Push
+	pushGateway    *metrics.Publish
 	queueMessaging *messaging.Messaging
 	ctx            context.Context
 }
 
-func NewController(ctx context.Context, pushGateway string, sqsQueueName string) (*Controller, error) {
-	var p *metrics.Push
-	if pushGateway != "" {
-		p = metrics.NewPush(pushGateway)
+func NewController(ctx context.Context, region string, pushGateway string, sqsQueueName string, cloudWatchPrefix string) (*Controller, error) {
+
+	configuration := cfg.NewConfiguration(envs.WithEnvironmentVariables())
+	cfg, err := creds.NewSessionForRegion(region, configuration)
+	if err != nil {
+		return nil, err
 	}
+
+	var cw *cloudwatch.Client
+	if cloudWatchPrefix != "" {
+		cw = cloudwatch.NewFromConfig(*cfg)
+	}
+
+	p := metrics.NewPublish(pushGateway, cloudWatchPrefix, cw)
 
 	var m *messaging.Messaging
 	if sqsQueueName != "" {
 		slog.Info("Using messaging", "queue", sqsQueueName)
-		cfg, err := infra.NewSession()
-		if err != nil {
-			return nil, err
-		}
 		clientSqs := sqs.NewFromConfig(*cfg)
 		m = messaging.NewMessaging(clientSqs, sqsQueueName)
 		if err := m.Start(ctx); err != nil {
@@ -42,9 +50,9 @@ func NewController(ctx context.Context, pushGateway string, sqsQueueName string)
 	}
 
 	return &Controller{
+		ctx:            ctx,
 		pushGateway:    p,
 		queueMessaging: m,
-		ctx:            ctx,
 	}, nil
 }
 
@@ -61,7 +69,7 @@ func (c *Controller) Run(probesList probes.Probes) {
 			if errProbe != nil {
 				monitorErr++
 			} else {
-				// Push metrics to PushGateway
+				// Push metrics
 				err := c.SendMetrics(result)
 				if err != nil {
 					monitorErr++
@@ -84,14 +92,10 @@ func (c *Controller) Run(probesList probes.Probes) {
 }
 
 func (c *Controller) SendMetrics(metrics metrics.IMetrics) error {
-	if c.pushGateway != nil {
-		slog.Info("Metrics monitoring", "probe", metrics.String())
-		if err := c.pushGateway.Send(metrics.GetId(), metrics.GetMetrics()); err != nil {
-			slog.Error("Error pushing monitoring", "error", err)
-			return err
-		}
-	} else {
-		slog.Info("No push gateway defined")
+	slog.Info("Metrics monitoring", "probe", metrics.String())
+	if err := c.pushGateway.Send(metrics); err != nil {
+		slog.Error("Error pushing monitoring", "error", err)
+		return err
 	}
 	return nil
 }

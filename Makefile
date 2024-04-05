@@ -21,7 +21,7 @@ localstack: build
 	--role arn:aws:iam::000000000000:role/lambda-role \
 	--timeout 900 \
 	--description "$(time)" \
-	--environment Variables="{SQS_QUEUE_NAME=Events,LOGLEVEL=debug}" | jq
+	--environment Variables="{SQS_QUEUE_NAME=Events,LOGLEVEL=debug,AWS_REGION_CENTRAL=us-east-1,CLOUDWATCHPREFIX=/probe}" | jq
 
 logs:
 	aws --endpoint-url=http://localhost:4566 logs tail "/aws/lambda/$(lambda_name)" --follow
