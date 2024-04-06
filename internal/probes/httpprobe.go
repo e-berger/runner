@@ -142,10 +142,22 @@ func (t httpProbe) validExpectedContent(body io.ReadCloser) error {
 
 func (t httpProbe) validExpectedStatus(statusCode int) error {
 	slog.Info("Probe status code", "probe", t.GetId(), "status", statusCode, "expected", t.GetHttpProbeInfo().ExpectedStatusCodes, "not_expected", t.GetHttpProbeInfo().NotExpectedStatusCodes)
-	if len(t.GetHttpProbeInfo().ExpectedStatusCodes) > 0 && !matchStatus(t.GetHttpProbeInfo().ExpectedStatusCodes, statusCode) {
-		return fmt.Errorf("unexpected status code %d", statusCode)
-	} else if len(t.GetHttpProbeInfo().NotExpectedStatusCodes) > 0 && matchStatus(t.GetHttpProbeInfo().NotExpectedStatusCodes, statusCode) {
-		return fmt.Errorf("unexpected status code %d", statusCode)
+	if len(t.GetHttpProbeInfo().ExpectedStatusCodes) > 0 {
+		if t.GetHttpProbeInfo().ExpectedStatusCodes.IsValid() {
+			if !matchStatus(t.GetHttpProbeInfo().ExpectedStatusCodes, statusCode) {
+				return fmt.Errorf("unexpected status code %d", statusCode)
+			}
+		} else {
+			slog.Error("Invalid status code family", "probe", t.GetId(), "status", t.GetHttpProbeInfo().ExpectedStatusCodes)
+		}
+	} else if len(t.GetHttpProbeInfo().NotExpectedStatusCodes) > 0 {
+		if t.GetHttpProbeInfo().NotExpectedStatusCodes.IsValid() {
+			if matchStatus(t.GetHttpProbeInfo().NotExpectedStatusCodes, statusCode) {
+				return fmt.Errorf("unexpected status code %d", statusCode)
+			}
+		} else {
+			slog.Error("Invalid status code family", "probe", t.GetId(), "status", t.GetHttpProbeInfo().NotExpectedStatusCodes)
+		}
 	}
 	return nil
 }
