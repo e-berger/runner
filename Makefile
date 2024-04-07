@@ -1,5 +1,6 @@
-.PHONY: build localstack logs sam-local build-Runner call purgequeue
+.PHONY: build localstack logs sam-local build-Runner call purge
 
+queue_name = Events
 lambda_name = sheepdog-runner
 endpoint = http://localhost:4566
 
@@ -38,5 +39,5 @@ build-Runner:
 call:
 	awslocal --endpoint-url=$(endpoint) lambda invoke --function-name $(lambda_name) --cli-binary-format raw-in-base64-out --payload file://inputs.txt /dev/stdout
 
-purgequeue:
-	awslocal --endpoint-url=$(endpoint) sqs purge-queue --queue-url http://localhost:4566/000000000000/Events
+purge:
+	awslocal --endpoint-url=$(endpoint) sqs purge-queue --queue-url http://localhost:4566/000000000000/${queue_name}
