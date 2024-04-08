@@ -1,4 +1,4 @@
-package metrics
+package results
 
 import (
 	"time"
@@ -8,19 +8,22 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type IMetrics interface {
+type IResults interface {
 	GetCloudWatchDimensions() []cloudwatchtype.Dimension
 	GetPrometheusMetrics() prometheus.Collector
 	String() string
 	GetId() string
 	GetLatency() float64
 	GetTime() time.Time
+	SetError(err error)
+	GetErrorProbe() error
+	MarshalJSON() ([]byte, error)
 }
 
-type metrics struct {
-	id       string
-	time     time.Time
-	location types.Location
-	latency  float64
-	valid    string
+type results struct {
+	id         string
+	time       time.Time
+	location   types.Location
+	latency    float64
+	errorProbe error
 }

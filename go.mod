@@ -13,9 +13,10 @@ require (
 
 require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.37.0
-	github.com/e-berger/sheepdog-domain v0.0.17
 	github.com/e-berger/sheepdog-utils v0.0.8
 )
+
+require github.com/e-berger/sheepdog-domain v0.0.26
 
 require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.1 // indirect

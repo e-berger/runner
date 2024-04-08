@@ -4,24 +4,27 @@ import (
 	"context"
 	"log/slog"
 	"sync"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	"github.com/e-berger/sheepdog-domain/status"
+	"github.com/e-berger/sheepdog-domain/events"
 	"github.com/e-berger/sheepdog-domain/types"
 	"github.com/e-berger/sheepdog-runner/internal/infra/messaging"
-	"github.com/e-berger/sheepdog-runner/internal/metrics"
 	"github.com/e-berger/sheepdog-runner/internal/probes"
+	"github.com/e-berger/sheepdog-runner/internal/results"
 	"github.com/e-berger/sheepdog-utils/aws/creds"
 	"github.com/e-berger/sheepdog-utils/cfg"
 	"github.com/e-berger/sheepdog-utils/cfg/envs"
 )
 
 type Controller struct {
-	pushGateway    *metrics.Publish
+	pushGateway    *results.Publish
 	queueMessaging *messaging.Messaging
 	ctx            context.Context
+}
+
+type resultChannel struct {
+	result results.IResults
 }
 
 func NewController(ctx context.Context, region string, pushGateway string, sqsQueueName string, cloudWatchPrefix string) (*Controller, error) {
@@ -37,7 +40,7 @@ func NewController(ctx context.Context, region string, pushGateway string, sqsQu
 		cw = cloudwatch.NewFromConfig(*cfg)
 	}
 
-	p := metrics.NewPublish(pushGateway, cloudWatchPrefix, cw)
+	p := results.NewPublish(pushGateway, cloudWatchPrefix, cw)
 
 	var m *messaging.Messaging
 	if sqsQueueName != "" {
@@ -56,62 +59,79 @@ func NewController(ctx context.Context, region string, pushGateway string, sqsQu
 	}, nil
 }
 
-func (c *Controller) Run(probesList probes.Probes) {
-	monitorErr := 0
+func (c *Controller) Run(probesList probes.Probes) []results.IResults {
+	var results []results.IResults
 	wg := new(sync.WaitGroup)
+	slog.Debug("Running probes", "probes", probesList.Probes)
+
+	ch := make(chan resultChannel)
 	for _, probe := range probesList.Probes {
 		wg.Add(1)
-		go func() {
-			slog.Info("Launching monitoring", "probe", probe.String())
-			defer wg.Done()
-			// Launch the probe
-			result, errProbe := probe.Launch()
-			if errProbe != nil {
-				monitorErr++
-			} else {
-				// Push metrics
-				err := c.SendMetrics(result)
-				if err != nil {
-					monitorErr++
-					slog.Error("Error pushing monitoring", "error", err)
-				}
-			}
-			// Find out if we need to send an update for status
-			if c.queueMessaging != nil {
-				errStatus := c.UpdateProbeStatus(probe, probesList.Location, probesList.Mode, result.GetTime(), errProbe)
-				if errStatus != nil {
-					slog.Error("Error publishing status", "error", errStatus)
-				}
-			} else {
-				slog.Info("No queue messaging defined")
-			}
-		}()
+		go c.runProbe(ch, wg, probe, probesList.Location, probesList.Mode)
 	}
+
+	wg.Add(1)
+	go func() {
+		for v := range ch {
+			slog.Debug("Results", "add result", v.result.String())
+			results = append(results, v.result)
+			if len(results) == len(probesList.Probes) {
+				wg.Done()
+			}
+		}
+	}()
 	wg.Wait()
-	slog.Info("End monitoring", "nb error", monitorErr)
+	close(ch)
+	return results
 }
 
-func (c *Controller) SendMetrics(metrics metrics.IMetrics) error {
-	slog.Info("Metrics monitoring", "probe", metrics.String())
-	if err := c.pushGateway.Send(metrics); err != nil {
+func (c *Controller) runProbe(ch chan resultChannel, wg *sync.WaitGroup, probe probes.IProbe, location types.Location, mode types.Mode) {
+	defer wg.Done()
+	slog.Info("Launching monitoring", "probe", probe.String())
+	// Launch the probe
+	result := probe.Launch()
+	if result.GetErrorProbe() == nil {
+		// Push metrics
+		err := c.SendResults(result)
+		if err != nil {
+			slog.Error("Error pushing monitoring", "error", err)
+			result.SetError(err)
+		}
+	}
+	// Find out if we need to send an update for status
+	if c.queueMessaging != nil && mode != types.MANUAL {
+		errStatus := c.UpdateProbeStatus(probe, location, mode, result)
+		if errStatus != nil {
+			slog.Error("Error publishing status", "error", errStatus)
+			result.SetError(errStatus)
+		}
+	} else {
+		slog.Info("No queue messaging defined")
+	}
+	ch <- resultChannel{result: result}
+}
+
+func (c *Controller) SendResults(result results.IResults) error {
+	slog.Info("Metrics monitoring", "probe", result.String())
+	if err := c.pushGateway.Send(result); err != nil {
 		slog.Error("Error pushing monitoring", "error", err)
 		return err
 	}
 	return nil
 }
 
-func (c *Controller) UpdateProbeStatus(probe probes.IProbe, location types.Location, mode types.Mode, started time.Time, err error) error {
-	if err != nil || probe.IsInError() {
-		slog.Info("Update status", "probe", probe.GetId(), "current error", probe.IsInError(), "new error", err)
-		var s status.StatusJSON
-		if err != nil {
-			s = status.NewStatusJSON(started, probe.GetId(), uint(types.ERROR), err.Error(), uint(mode), uint(location))
+func (c *Controller) UpdateProbeStatus(probe probes.IProbe, location types.Location, mode types.Mode, result results.IResults) error {
+	if result.GetErrorProbe() != nil || probe.IsInError() {
+		slog.Info("Update events", "probe", probe.GetId(), "current error", probe.IsInError(), "new error", result.GetErrorProbe())
+		var e events.EventsJSON
+		if result.GetErrorProbe() != nil {
+			e = events.NewEventsJSON(result.GetTime(), probe.GetId(), uint(types.ERROR), result.GetErrorProbe().Error(), uint(mode), uint(location))
 		} else {
-			s = status.NewStatusJSON(started, probe.GetId(), uint(types.UP), "", uint(mode), uint(location))
+			e = events.NewEventsJSON(result.GetTime(), probe.GetId(), uint(types.UP), "", uint(mode), uint(location))
 		}
-		return c.queueMessaging.Publish(c.ctx, s)
+		return c.queueMessaging.Publish(c.ctx, e)
 	} else {
-		slog.Debug("No status update", "probe", probe.GetId(), "current error", probe.IsInError())
+		slog.Debug("No events update", "probe", probe.GetId(), "current error", probe.IsInError())
 	}
 	return nil
 }

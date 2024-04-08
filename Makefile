@@ -39,5 +39,8 @@ build-Runner:
 call:
 	awslocal --endpoint-url=$(endpoint) lambda invoke --function-name $(lambda_name) --cli-binary-format raw-in-base64-out --payload file://inputs.txt /dev/stdout
 
+callhttp:
+	awslocal --endpoint-url=$(endpoint) lambda invoke --function-name $(lambda_name) --cli-binary-format raw-in-base64-out --payload file://inputs_http.txt /dev/stdout
+
 purge:
 	awslocal --endpoint-url=$(endpoint) sqs purge-queue --queue-url http://localhost:4566/000000000000/${queue_name}

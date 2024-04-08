@@ -2,11 +2,10 @@ package probes
 
 import (
 	"fmt"
-	"time"
 
 	domain "github.com/e-berger/sheepdog-domain/probes"
 	"github.com/e-berger/sheepdog-domain/types"
-	"github.com/e-berger/sheepdog-runner/internal/metrics"
+	"github.com/e-berger/sheepdog-runner/internal/results"
 )
 
 type pingProbe struct {
@@ -33,15 +32,7 @@ func NewPingProbe(probe domain.Probe, location types.Location) (IProbe, error) {
 	}, nil
 }
 
-func (t pingProbe) Launch() (metrics.IMetrics, error) {
-	time_start := time.Now()
-	result := metrics.NewResultHttpDetails(
-		t.GetId(),
-		t.location,
-		time_start,
-		time.Since(time_start).Milliseconds(),
-		DEFAULT_VALID,
-		t.GetHttpProbeInfo().Method,
-		200)
-	return result, nil
+func (t pingProbe) Launch() results.IResults {
+	result := results.NewResultsPingEmpty(t.GetId(), t.location)
+	return result
 }

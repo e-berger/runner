@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	"github.com/e-berger/sheepdog-domain/status"
+	"github.com/e-berger/sheepdog-domain/events"
 )
 
 const (
@@ -77,7 +77,7 @@ func (m *Messaging) createMessaging(ctx context.Context) error {
 	return nil
 }
 
-func (m *Messaging) Publish(ctx context.Context, content status.StatusJSON) error {
+func (m *Messaging) Publish(ctx context.Context, content events.EventsJSON) error {
 	contentJSON, err := json.Marshal(&content)
 	if err != nil {
 		return err
@@ -89,7 +89,7 @@ func (m *Messaging) Publish(ctx context.Context, content status.StatusJSON) erro
 		MessageAttributes: map[string]types.MessageAttributeValue{
 			"probeid": {
 				DataType:    aws.String("String"),
-				StringValue: aws.String(content.ProbeID),
+				StringValue: aws.String(content.ProbeId),
 			},
 			"timestamp": {
 				DataType:    aws.String("String"),

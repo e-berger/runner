@@ -9,11 +9,12 @@ import (
 	"log/slog"
 	"net/http"
 	"regexp"
+	"strconv"
 	"time"
 
 	domain "github.com/e-berger/sheepdog-domain/probes"
 	"github.com/e-berger/sheepdog-domain/types"
-	"github.com/e-berger/sheepdog-runner/internal/metrics"
+	"github.com/e-berger/sheepdog-runner/internal/results"
 )
 
 type httpProbe struct {
@@ -40,7 +41,12 @@ func (t httpProbe) IsInError() bool {
 	return t.Probe.IsInError()
 }
 
-func (t httpProbe) Launch() (metrics.IMetrics, error) {
+func (t httpProbe) Launch() results.IResults {
+	result := results.NewResultsHttpEmpty(
+		t.GetId(),
+		t.Location,
+		t.GetHttpProbeInfo().Method)
+
 	// Redirect
 	var checkRedirect func(req *http.Request, via []*http.Request) error
 	if t.GetHttpProbeInfo().FollowRedirects {
@@ -68,7 +74,9 @@ func (t httpProbe) Launch() (metrics.IMetrics, error) {
 
 	req, err := http.NewRequest(t.GetHttpProbeInfo().Method, t.GetHttpProbeInfo().Url, bodyReader)
 	if err != nil {
-		return nil, err
+		result.SetStatusCode("500")
+		result.SetError(err)
+		return result
 	}
 
 	// Headers
@@ -80,27 +88,27 @@ func (t httpProbe) Launch() (metrics.IMetrics, error) {
 	req = req.WithContext(ctx)
 
 	time.AfterFunc(timeout, func() {
+		result.SetStatusCode("500")
+		result.SetError(fmt.Errorf("timeout"))
 		cancel()
 	})
 
 	time_start := time.Now()
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		result.SetStatusCode("500")
+		result.SetError(err)
+		return result
 	}
 	defer resp.Body.Close()
 
-	result := metrics.NewResultHttpDetails(
-		t.GetId(),
-		t.Location,
-		time_start,
-		time.Since(time_start).Milliseconds(),
-		DEFAULT_VALID,
-		t.GetHttpProbeInfo().Method,
-		resp.StatusCode)
-
+	result.SetTime(time_start)
+	result.SetStatusCode(strconv.Itoa(resp.StatusCode))
+	result.SetLatency(time.Since(time_start).Milliseconds())
 	// Analyse the response with constraints
-	return result, t.analyse(resp)
+	result.SetError(t.analyse(resp))
+
+	return result
 }
 
 func (t httpProbe) analyse(resp *http.Response) error {

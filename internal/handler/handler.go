@@ -10,18 +10,24 @@ type Event struct {
 	events.APIGatewayProxyRequest
 }
 
-func (e Event) Handler(c *controller.Controller) (*events.APIGatewayProxyResponse, error) {
+type Response struct {
+	events.APIGatewayProxyResponse `json:",omitempty"`
+}
+
+func (e Event) Handler(c *controller.Controller) (Response, error) {
 	switch {
 	//api gateway
 	case e.APIGatewayProxyRequest.Body != "":
-		return ApiGatewayEventHandler(c, e.APIGatewayProxyRequest), nil
+		return Response{
+			APIGatewayProxyResponse: *ApiGatewayEventHandler(c, e.APIGatewayProxyRequest),
+		}, nil
 	// eventbridge / cloudwatch
 	case len(e.CloudWatchEvent.Detail) > 0:
 		if err := CloudWatchEventHandler(c, e.CloudWatchEvent); err != nil {
 			panic(err)
 		}
 	default:
-		return DefaultEventHandler(c, e), nil
+		DefaultEventHandler(c, e)
 	}
-	return nil, nil
+	return Response{}, nil
 }

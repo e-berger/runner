@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/e-berger/sheepdog-runner/internal/controller"
 	"github.com/e-berger/sheepdog-runner/internal/handler"
@@ -39,7 +38,7 @@ func init() {
 
 	sqsQueueName := os.Getenv(SQSQUEUENAME)
 	if sqsQueueName == "" {
-		slog.Info(fmt.Sprintf("%v not set, status will not be pushed", SQSQUEUENAME))
+		slog.Info(fmt.Sprintf("%v not set, events will not be pushed", SQSQUEUENAME))
 	}
 
 	region := os.Getenv(AWSREGIONCENTRAL)
@@ -55,7 +54,7 @@ func init() {
 	}
 }
 
-func mainHandler(_ context.Context, event handler.Event) (*events.APIGatewayProxyResponse, error) {
+func mainHandler(_ context.Context, event handler.Event) (handler.Response, error) {
 	return event.Handler(c)
 }
 

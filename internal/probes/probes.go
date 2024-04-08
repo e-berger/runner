@@ -6,7 +6,7 @@ import (
 
 	domain "github.com/e-berger/sheepdog-domain/probes"
 	"github.com/e-berger/sheepdog-domain/types"
-	"github.com/e-berger/sheepdog-runner/internal/metrics"
+	"github.com/e-berger/sheepdog-runner/internal/results"
 )
 
 const (
@@ -14,7 +14,7 @@ const (
 )
 
 type IProbe interface {
-	Launch() (metrics.IMetrics, error)
+	Launch() results.IResults
 	GetId() string
 	IsInError() bool
 	String() string

@@ -1,4 +1,4 @@
-package metrics
+package results
 
 import (
 	"context"
@@ -28,7 +28,7 @@ func NewPublish(pushGateway string, cloudWatchPrefix string, cloudWatchClient *c
 	}
 }
 
-func (p *Publish) Send(metrics IMetrics) error {
+func (p *Publish) Send(metrics IResults) error {
 	// prometheus pushgateway
 	if p.pushGateway != "" {
 		slog.Debug("Sending metrics to Pushgateway", "gateway", p.pushGateway)
