@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,7 +15,6 @@ import (
 type resultsHttp struct {
 	results
 	httpMethod string
-	statusCode string
 }
 
 type ResultsHttpJSON struct {
@@ -25,13 +23,13 @@ type ResultsHttpJSON struct {
 	Location   string `json:"location"`
 	Latency    string `json:"latency"`
 	ErrorProbe string `json:"error"`
+	Code       string `json:"code"`
 	HttpMethod string `json:"httpMethod"`
-	StatusCode string `json:"statusCode"`
 }
 
 func (r *resultsHttp) String() string {
-	return fmt.Sprintf("id: %s, location: %s, latency: %f, httpMethod: %s, statusCode: %s",
-		r.id, r.location, r.latency, r.httpMethod, r.statusCode)
+	return fmt.Sprintf("id: %s, location: %s, latency: %f, httpMethod: %s, Code: %s",
+		r.id, r.location, r.latency, r.httpMethod, r.code.String())
 }
 
 func (r *resultsHttp) GetId() string {
@@ -53,9 +51,9 @@ func NewResultsHttp(id string, location types.Location, started time.Time, laten
 			time:     started,
 			location: location,
 			latency:  float64(latency) / 1000.0,
+			code:     types.Code(statusCode),
 		},
 		httpMethod: httpMethod,
-		statusCode: strconv.Itoa(statusCode),
 	}
 }
 
@@ -80,7 +78,6 @@ func (r *resultsHttp) GetPrometheusMetrics() prometheus.Collector {
 
 	completionTime.With(prometheus.Labels{
 		"method":   r.httpMethod,
-		"status":   r.statusCode,
 		"location": r.location.String(),
 	}).Observe(r.latency)
 	return completionTime
@@ -91,10 +88,6 @@ func (r *resultsHttp) GetCloudWatchDimensions() []cloudwatchtype.Dimension {
 		{
 			Name:  aws.String("location"),
 			Value: aws.String(r.location.String()),
-		},
-		{
-			Name:  aws.String("status_code"),
-			Value: aws.String(r.statusCode),
 		},
 	}
 }
@@ -108,8 +101,8 @@ func (r *resultsHttp) SetLatency(latency int64) {
 	r.latency = float64(latency) / 1000.0
 }
 
-func (r *resultsHttp) SetStatusCode(statusCode string) {
-	r.statusCode = statusCode
+func (r *resultsHttp) SetCode(code types.Code) {
+	r.code = code
 }
 
 func (r *resultsHttp) GetErrorProbe() error {
@@ -128,7 +121,7 @@ func (r *resultsHttp) MarshalJSON() ([]byte, error) {
 		Latency:    fmt.Sprintf("%f", r.latency),
 		ErrorProbe: fmt.Sprintf("%v", r.errorProbe),
 		HttpMethod: r.httpMethod,
-		StatusCode: r.statusCode,
+		Code:       r.code.String(),
 	}
 	return json.Marshal(result)
 }

@@ -9,7 +9,6 @@ import (
 	"log/slog"
 	"net/http"
 	"regexp"
-	"strconv"
 	"time"
 
 	domain "github.com/e-berger/sheepdog-domain/probes"
@@ -74,7 +73,7 @@ func (t httpProbe) Launch() results.IResults {
 
 	req, err := http.NewRequest(t.GetHttpProbeInfo().Method, t.GetHttpProbeInfo().Url, bodyReader)
 	if err != nil {
-		result.SetStatusCode("500")
+		result.SetCode(types.ERROR)
 		result.SetError(err)
 		return result
 	}
@@ -88,7 +87,7 @@ func (t httpProbe) Launch() results.IResults {
 	req = req.WithContext(ctx)
 
 	time.AfterFunc(timeout, func() {
-		result.SetStatusCode("500")
+		result.SetCode(types.TIMEOUT)
 		result.SetError(fmt.Errorf("timeout"))
 		cancel()
 	})
@@ -96,17 +95,21 @@ func (t httpProbe) Launch() results.IResults {
 	time_start := time.Now()
 	resp, err := client.Do(req)
 	if err != nil {
-		result.SetStatusCode("500")
+		result.SetCode(types.ERROR)
 		result.SetError(err)
 		return result
 	}
 	defer resp.Body.Close()
 
 	result.SetTime(time_start)
-	result.SetStatusCode(strconv.Itoa(resp.StatusCode))
+	result.SetCode(types.UP)
 	result.SetLatency(time.Since(time_start).Milliseconds())
 	// Analyse the response with constraints
-	result.SetError(t.analyse(resp))
+	errAnalyse := t.analyse(resp)
+	if err != nil {
+		result.SetCode(types.ERROR)
+	}
+	result.SetError(errAnalyse)
 
 	return result
 }

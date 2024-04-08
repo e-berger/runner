@@ -37,8 +37,8 @@ github.com/cespare/xxhash/v2 v2.2.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XL
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/e-berger/sheepdog-domain v0.0.26 h1:OcHXTYcL77/TWQGQiCrXwXPkHy7t8Q7vz09yw3uJA5Y=
-github.com/e-berger/sheepdog-domain v0.0.26/go.mod h1:ZgnyJ8SukSJMdsUrmHkEMvkoW4jOrv+SabxAEcip6R4=
+github.com/e-berger/sheepdog-domain v0.0.28 h1:HMtGDR1zDYdQlRBZk8hnpVW41xInwjEKjvonKoGjqxM=
+github.com/e-berger/sheepdog-domain v0.0.28/go.mod h1:ZgnyJ8SukSJMdsUrmHkEMvkoW4jOrv+SabxAEcip6R4=
 github.com/e-berger/sheepdog-utils v0.0.8 h1:KVtmeZ5ZkC/SlxHNC015tMp+0JUCQYz1jd34ZVxVcZc=
 github.com/e-berger/sheepdog-utils v0.0.8/go.mod h1:wfcACbUeWCl5vYbYrqpOP+fWPzCejHUSGd6FUiLgsac=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=

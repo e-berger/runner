@@ -3,7 +3,6 @@ package results
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,7 +13,6 @@ import (
 
 type resultsPing struct {
 	results
-	statusCode string
 }
 
 type ResultsPingJSON struct {
@@ -23,12 +21,12 @@ type ResultsPingJSON struct {
 	Location   string `json:"location"`
 	Latency    string `json:"latency"`
 	ErrorProbe string `json:"error"`
-	StatusCode string `json:"statusCode"`
+	Code       string `json:"code"`
 }
 
 func (r *resultsPing) String() string {
-	return fmt.Sprintf("id: %s, location: %s, latency: %f, statusCode: %s",
-		r.id, r.location, r.latency, r.statusCode)
+	return fmt.Sprintf("id: %s, location: %s, latency: %f, code: %s",
+		r.id, r.location, r.latency, r.code.String())
 }
 
 func (r *resultsPing) GetId() string {
@@ -50,8 +48,8 @@ func NewResultsPing(id string, location types.Location, started time.Time, laten
 			time:     started,
 			location: location,
 			latency:  float64(latency) / 1000.0,
+			code:     types.Code(statusCode),
 		},
-		statusCode: strconv.Itoa(statusCode),
 	}
 }
 
@@ -74,7 +72,6 @@ func (r *resultsPing) GetPrometheusMetrics() prometheus.Collector {
 	}, []string{"method", "status", "location"})
 
 	completionTime.With(prometheus.Labels{
-		"status":   r.statusCode,
 		"location": r.location.String(),
 	}).Observe(r.latency)
 	return completionTime
@@ -85,10 +82,6 @@ func (r *resultsPing) GetCloudWatchDimensions() []cloudwatchtype.Dimension {
 		{
 			Name:  aws.String("location"),
 			Value: aws.String(r.location.String()),
-		},
-		{
-			Name:  aws.String("status_code"),
-			Value: aws.String(r.statusCode),
 		},
 	}
 }
@@ -101,8 +94,8 @@ func (r *resultsPing) SetLatency(latency int64) {
 	r.latency = float64(latency) / 1000.0
 }
 
-func (r *resultsPing) SetStatusCode(statusCode string) {
-	r.statusCode = statusCode
+func (r *resultsPing) SetCode(code types.Code) {
+	r.code = code
 }
 
 func (r *resultsPing) SetTime(time time.Time) {
@@ -120,7 +113,7 @@ func (r *resultsPing) MarshalJSON() ([]byte, error) {
 		Location:   r.location.String(),
 		Latency:    fmt.Sprintf("%f", r.latency),
 		ErrorProbe: fmt.Sprintf("%v", r.errorProbe),
-		StatusCode: r.statusCode,
+		Code:       r.code.String(),
 	}
 	return json.Marshal(result)
 }

@@ -25,5 +25,6 @@ type results struct {
 	time       time.Time
 	location   types.Location
 	latency    float64
+	code       types.Code
 	errorProbe error
 }
