@@ -14,7 +14,8 @@ const (
 )
 
 type IProbe interface {
-	Launch() results.IResults
+	GetHttpClient() HTTPClient
+	Launch(client HTTPClient) results.IResults
 	GetId() string
 	IsInError() bool
 	String() string

@@ -41,6 +41,10 @@ func (r *resultsPing) GetTime() time.Time {
 	return r.time
 }
 
+func (r *resultsPing) GetCode() types.Code {
+	return r.code
+}
+
 func NewResultsPing(id string, location types.Location, started time.Time, latency int64, statusCode int) *resultsPing {
 	return &resultsPing{
 		results: results{

@@ -32,7 +32,11 @@ func NewPingProbe(probe domain.Probe, location types.Location) (IProbe, error) {
 	}, nil
 }
 
-func (t pingProbe) Launch() results.IResults {
+func (t pingProbe) GetHttpClient() HTTPClient {
+	return nil
+}
+
+func (t pingProbe) Launch(client HTTPClient) results.IResults {
 	result := results.NewResultsPingEmpty(t.GetId(), t.location)
 	return result
 }

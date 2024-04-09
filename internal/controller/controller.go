@@ -62,7 +62,6 @@ func NewController(ctx context.Context, region string, pushGateway string, sqsQu
 func (c *Controller) Run(probesList probes.Probes) []results.IResults {
 	var results []results.IResults
 	wg := new(sync.WaitGroup)
-	slog.Debug("Running probes", "probes", probesList.Probes)
 
 	ch := make(chan resultChannel)
 	for _, probe := range probesList.Probes {
@@ -73,7 +72,6 @@ func (c *Controller) Run(probesList probes.Probes) []results.IResults {
 	wg.Add(1)
 	go func() {
 		for v := range ch {
-			slog.Debug("Results", "add result", v.result.String())
 			results = append(results, v.result)
 			if len(results) == len(probesList.Probes) {
 				wg.Done()
@@ -89,7 +87,7 @@ func (c *Controller) runProbe(ch chan resultChannel, wg *sync.WaitGroup, probe p
 	defer wg.Done()
 	slog.Info("Launching monitoring", "probe", probe.String())
 	// Launch the probe
-	result := probe.Launch()
+	result := probe.Launch(probe.GetHttpClient())
 	if result.GetErrorProbe() == nil {
 		// Push metrics
 		err := c.SendResults(result)
@@ -106,7 +104,7 @@ func (c *Controller) runProbe(ch chan resultChannel, wg *sync.WaitGroup, probe p
 			result.SetError(errStatus)
 		}
 	} else {
-		slog.Info("No queue messaging defined")
+		slog.Info("No queue for messaging defined")
 	}
 	ch <- resultChannel{result: result}
 }
@@ -114,20 +112,20 @@ func (c *Controller) runProbe(ch chan resultChannel, wg *sync.WaitGroup, probe p
 func (c *Controller) SendResults(result results.IResults) error {
 	slog.Info("Metrics monitoring", "probe", result.String())
 	if err := c.pushGateway.Send(result); err != nil {
-		slog.Error("Error pushing monitoring", "error", err)
 		return err
 	}
 	return nil
 }
 
 func (c *Controller) UpdateProbeStatus(probe probes.IProbe, location types.Location, mode types.Mode, result results.IResults) error {
+	// Probe in error or was in error
 	if result.GetErrorProbe() != nil || probe.IsInError() {
 		slog.Info("Update events", "probe", probe.GetId(), "current error", probe.IsInError(), "new error", result.GetErrorProbe())
 		var e events.EventsJSON
 		if result.GetErrorProbe() != nil {
-			e = events.NewEventsJSON(result.GetTime(), probe.GetId(), uint(types.ERROR), result.GetErrorProbe().Error(), uint(mode), uint(location))
+			e = events.NewEventsJSON(result.GetTime(), probe.GetId(), uint(result.GetCode()), result.GetErrorProbe().Error(), uint(mode), uint(location))
 		} else {
-			e = events.NewEventsJSON(result.GetTime(), probe.GetId(), uint(types.UP), "", uint(mode), uint(location))
+			e = events.NewEventsJSON(result.GetTime(), probe.GetId(), uint(result.GetCode()), "", uint(mode), uint(location))
 		}
 		return c.queueMessaging.Publish(c.ctx, e)
 	} else {

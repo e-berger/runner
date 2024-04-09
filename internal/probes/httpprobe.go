@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
+	"os"
 	"regexp"
 	"time"
 
@@ -16,9 +18,11 @@ import (
 	"github.com/e-berger/sheepdog-runner/internal/results"
 )
 
+const default_timeout = 10
+
 type httpProbe struct {
 	domain.Probe
-	Location types.Location
+	location types.Location
 }
 
 func NewHttpProbe(probe domain.Probe, location types.Location) (IProbe, error) {
@@ -40,30 +44,40 @@ func (t httpProbe) IsInError() bool {
 	return t.Probe.IsInError()
 }
 
-func (t httpProbe) Launch() results.IResults {
-	result := results.NewResultsHttpEmpty(
-		t.GetId(),
-		t.Location,
-		t.GetHttpProbeInfo().Method)
-
+func (t httpProbe) GetHttpClient() HTTPClient {
 	// Redirect
 	var checkRedirect func(req *http.Request, via []*http.Request) error
 	if t.GetHttpProbeInfo().FollowRedirects {
 		checkRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
 	}
 
-	// Allow insecure
+	// Timeout
+	timeout := time.Duration(default_timeout * time.Second)
+	if t.Probe.GetHttpProbeInfo().Timeout != 0 {
+		timeout = time.Duration(t.Probe.GetHttpProbeInfo().Timeout)
+	}
+
+	// Allow insecure & timeout
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: t.GetHttpProbeInfo().AllowInsecure},
+		Dial: (&net.Dialer{
+			Timeout: timeout,
+		}).Dial,
+		TLSHandshakeTimeout: timeout,
 	}
 
-	client := &http.Client{
+	return &http.Client{
 		CheckRedirect: checkRedirect,
 		Transport:     tr,
+		Timeout:       timeout,
 	}
+}
 
-	// Timeout
-	timeout := time.Duration(t.Probe.GetHttpProbeInfo().Timeout)
+func (t httpProbe) Launch(client HTTPClient) results.IResults {
+	result := results.NewResultsHttpEmpty(
+		t.GetId(),
+		t.location,
+		t.GetHttpProbeInfo().Method)
 
 	// Body
 	var bodyReader io.Reader
@@ -83,19 +97,16 @@ func (t httpProbe) Launch() results.IResults {
 		req.Header.Add(k, v)
 	}
 
-	ctx, cancel := context.WithCancel(context.TODO())
-	req = req.WithContext(ctx)
-
-	time.AfterFunc(timeout, func() {
-		result.SetCode(types.TIMEOUT)
-		result.SetError(fmt.Errorf("timeout"))
-		cancel()
-	})
+	req = req.WithContext(context.Background())
 
 	time_start := time.Now()
 	resp, err := client.Do(req)
 	if err != nil {
-		result.SetCode(types.ERROR)
+		if os.IsTimeout(err) {
+			result.SetCode(types.TIMEOUT)
+		} else {
+			result.SetCode(types.ERROR)
+		}
 		result.SetError(err)
 		return result
 	}
@@ -106,7 +117,7 @@ func (t httpProbe) Launch() results.IResults {
 	result.SetLatency(time.Since(time_start).Milliseconds())
 	// Analyse the response with constraints
 	errAnalyse := t.analyse(resp)
-	if err != nil {
+	if errAnalyse != nil {
 		result.SetCode(types.ERROR)
 	}
 	result.SetError(errAnalyse)

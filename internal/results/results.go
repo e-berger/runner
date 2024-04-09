@@ -17,6 +17,7 @@ type IResults interface {
 	GetTime() time.Time
 	SetError(err error)
 	GetErrorProbe() error
+	GetCode() types.Code
 	MarshalJSON() ([]byte, error)
 }
 

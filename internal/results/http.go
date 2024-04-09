@@ -113,6 +113,10 @@ func (r *resultsHttp) SetTime(time time.Time) {
 	r.time = time
 }
 
+func (r *resultsHttp) GetCode() types.Code {
+	return r.code
+}
+
 func (r *resultsHttp) MarshalJSON() ([]byte, error) {
 	result := &ResultsHttpJSON{
 		Id:         r.id,
