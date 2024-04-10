@@ -97,7 +97,7 @@ func (r *resultsHttp) SetError(err error) {
 }
 
 func (r *resultsHttp) SetLatency(latency int64) {
-	slog.Debug("Setting latency", "latency", latency)
+	slog.Debug("Result latency", "latency", latency, "probe", r.id)
 	r.latency = float64(latency) / 1000.0
 }
 

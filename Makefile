@@ -9,13 +9,15 @@ statuslocalhost = $(shell curl --write-out %{http_code} --silent --output /dev/n
 time = $(shell date --iso=seconds)
 
 build:
+	go env -w GOPRIVATE='github.com/e-berger/*'
 	goreleaser release --snapshot --clean
 
-localstack: build
-	go env -w GOPRIVATE='github.com/e-berger/*'
+init:
 	@if [ "$(statuslocalhost)" != "200" ]; then\
 		docker-compose up -d;\
 	fi
+
+deploy: build
 	aws --endpoint-url $(endpoint) lambda delete-function --function-name $(lambda_name) 2> /dev/null || true
 	aws --endpoint-url=$(endpoint) events create-event-bus --name ${event_queue} --tags "Key"="test","Value"="test" | jq 2> /dev/null || true
 	aws --endpoint-url=$(endpoint) events put-rule --name ${event_queue} --event-bus-name $(event_queue) \
@@ -29,6 +31,8 @@ localstack: build
 	--environment Variables="{SQS_QUEUE_NAME=Events,LOGLEVEL=debug,AWS_REGION_CENTRAL=us-east-1,CLOUDWATCHPREFIX=/probe}" | jq
 	aws --endpoint-url=$(endpoint) events put-targets --rule ${event_queue} --event-bus-name $(event_queue) \
 	--targets "Id"="1","Arn"="arn:aws:lambda:us-east-1:000000000000:function:$(lambda_name)" | jq > /dev/null 2>&1 || true
+
+localstack: build init deploy
 
 logs:
 	aws --endpoint-url=http://localhost:4566 logs tail "/aws/lambda/$(lambda_name)" --follow
