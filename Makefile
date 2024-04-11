@@ -1,4 +1,5 @@
 .PHONY: build localstack logs sam-local build-Runner call purge
+.SILENT: build
 
 queue_name = Events
 lambda_name = sheepdog-runner
@@ -10,7 +11,7 @@ time = $(shell date --iso=seconds)
 
 build:
 	go env -w GOPRIVATE='github.com/e-berger/*'
-	goreleaser release --snapshot --clean 1>/dev/null
+	goreleaser release --snapshot --clean
 
 init:
 	@if [ "$(statuslocalhost)" != "200" ]; then\
