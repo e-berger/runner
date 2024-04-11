@@ -1,10 +1,10 @@
 .PHONY: build localstack logs sam-local build-Runner call purge
-.SILENT: build
 
 queue_name = Events
 lambda_name = sheepdog-runner
 event_queue = sheepdog-dispatcher
 endpoint = http://localhost:4566
+region = us-east-1
 
 statuslocalhost = $(shell curl --write-out %{http_code} --silent --output /dev/null ${endpoint})
 time = $(shell date -Iseconds)
