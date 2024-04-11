@@ -19,18 +19,18 @@ init:
 	fi
 
 deploy: build
-	aws --endpoint-url $(endpoint) lambda delete-function --function-name $(lambda_name) 2>/dev/null 1>/dev/null || true
-	aws --endpoint-url=$(endpoint) events create-event-bus --name ${event_queue} --tags "Key"="test","Value"="test" 2>/dev/null 1>/dev/null || true
-	aws --endpoint-url=$(endpoint) events put-rule --name ${event_queue} --event-bus-name $(event_queue) \
+	@aws --endpoint-url $(endpoint) lambda delete-function --function-name $(lambda_name)  2>/dev/null 1>/dev/null || true
+	@aws --endpoint-url=$(endpoint) events create-event-bus --name ${event_queue} --tags "Key"="test","Value"="test" 2>/dev/null 1>/dev/null || true
+	@aws --endpoint-url=$(endpoint) events put-rule --name ${event_queue} --event-bus-name $(event_queue) \
 	--event-pattern "{\"detail\":{\"location\":[\"europe\"]},\"source\":[\"sheepdog-dispatcher\"]}" 2>/dev/null 1>/dev/null || true
-	aws --endpoint-url=$(endpoint) lambda create-function --function-name $(lambda_name) \
+	@aws --endpoint-url=$(endpoint) lambda create-function --function-name $(lambda_name) \
 	--zip-file fileb://dist/$(lambda_name)_Linux_x86_64.zip \
 	--handler bootstrap --runtime go1.x \
 	--role arn:aws:iam::000000000000:role/lambda-role \
 	--timeout 900 \
 	--description "$(time)" \
-	--environment Variables="{SQS_QUEUE_NAME=Events,LOGLEVEL=debug,AWS_REGION_CENTRAL=us-east-1,CLOUDWATCHPREFIX=/probe}" | jq
-	aws --endpoint-url=$(endpoint) events put-targets --rule ${event_queue} --event-bus-name $(event_queue) \
+	--environment Variables="{SQS_QUEUE_NAME=Events,LOGLEVEL=debug,AWS_REGION_CENTRAL=us-east-1,CLOUDWATCHPREFIX=/probe}" 1>/dev/null
+	@aws --endpoint-url=$(endpoint) events put-targets --rule ${event_queue} --event-bus-name $(event_queue) \
 	--targets "Id"="1","Arn"="arn:aws:lambda:us-east-1:000000000000:function:$(lambda_name)" 2>/dev/null 1>/dev/nul || true
 
 localstack: build init deploy
