@@ -5,6 +5,7 @@ lambda_name = sheepdog-runner
 event_queue = sheepdog-dispatcher
 endpoint = http://localhost:4566
 region = us-east-1
+archi = $(shell arch)
 
 statuslocalhost = $(shell curl --write-out %{http_code} --silent --output /dev/null ${endpoint})
 time = $(shell date -Iseconds)
@@ -24,7 +25,7 @@ deploy: build
 	@aws --region $(region) --endpoint-url=$(endpoint) events put-rule --name ${event_queue} --event-bus-name $(event_queue) \
 	--event-pattern "{\"detail\":{\"location\":[\"europe\"]},\"source\":[\"sheepdog-dispatcher\"]}" 2>/dev/null 1>/dev/null || true
 	@aws --region $(region) --endpoint-url=$(endpoint) lambda create-function --function-name $(lambda_name) \
-	--zip-file fileb://dist/$(lambda_name)_Linux_$(arch).zip \
+	--zip-file fileb://dist/$(lambda_name)_Linux_$(archi).zip \
 	--handler bootstrap --runtime go1.x \
 	--role arn:aws:iam::000000000000:role/lambda-role \
 	--timeout 900 \
