@@ -7,7 +7,7 @@ event_queue = sheepdog-dispatcher
 endpoint = http://localhost:4566
 
 statuslocalhost = $(shell curl --write-out %{http_code} --silent --output /dev/null ${endpoint})
-time = $(shell date --iso=seconds)
+time = $(shell date -Iseconds)
 
 build:
 	go env -w GOPRIVATE='github.com/e-berger/*'
