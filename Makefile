@@ -26,6 +26,7 @@ deploy: build
 	--event-pattern "{\"detail\":{\"location\":[\"europe\"]},\"source\":[\"sheepdog-dispatcher\"]}" 2>/dev/null 1>/dev/null || true
 	@aws --region $(region) --endpoint-url=$(endpoint) lambda create-function --function-name $(lambda_name) \
 	--zip-file fileb://dist/$(lambda_name)_Linux_$(archi).zip \
+	--architecture $(archi) \
 	--handler bootstrap --runtime go1.x \
 	--role arn:aws:iam::000000000000:role/lambda-role \
 	--timeout 900 \
