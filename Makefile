@@ -34,7 +34,7 @@ deploy: build
 	--environment Variables="{SQS_QUEUE_NAME=Events,LOGLEVEL=debug,AWS_REGION_CENTRAL=us-east-1,CLOUDWATCHPREFIX=/probe}" 1>/dev/null
 	@sleep 1
 	@aws --region $(region) --endpoint-url=$(endpoint) events put-targets --rule ${event_queue} --event-bus-name $(event_queue) \
-	--targets "Id"="1","Arn"="arn:aws:lambda:us-east-1:000000000000:function:$(lambda_name)" 2>/dev/null 1>/dev/nul || true
+	--targets "Id"="1","Arn"="arn:aws:lambda:us-east-1:000000000000:function:$(lambda_name)" 2>/dev/null | jq || true
 
 localstack: build init deploy
 
