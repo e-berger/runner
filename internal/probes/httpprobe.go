@@ -54,6 +54,9 @@ func (t httpProbe) GetHttpClient() HTTPClient {
 	// Timeout
 	timeout := time.Duration(default_timeout * time.Second)
 	if t.Probe.GetHttpProbeInfo().Timeout != 0 {
+		if t.Probe.GetHttpProbeInfo().Timeout < (1 * time.Second) {
+			timeout = 1 * time.Second
+		}
 		timeout = time.Duration(t.Probe.GetHttpProbeInfo().Timeout)
 	}
 
