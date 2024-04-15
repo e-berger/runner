@@ -51,13 +51,14 @@ func (t httpProbe) GetHttpClient() HTTPClient {
 		checkRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
 	}
 
-	// Timeout
+	// Default timeout : 10s
 	timeout := time.Duration(default_timeout * time.Second)
 	if t.Probe.GetHttpProbeInfo().Timeout != 0 {
-		if t.Probe.GetHttpProbeInfo().Timeout < (1 * time.Second) {
+		timeout = time.Duration(t.Probe.GetHttpProbeInfo().Timeout)
+		// Timeout can't be lower than 1s
+		if timeout < (1 * time.Second) {
 			timeout = 1 * time.Second
 		}
-		timeout = time.Duration(t.Probe.GetHttpProbeInfo().Timeout)
 	}
 
 	// Allow insecure & timeout
