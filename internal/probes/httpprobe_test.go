@@ -29,6 +29,7 @@ func TestHttpProbe_Launch(t *testing.T) {
 			Body:       io.NopCloser(bytes.NewBufferString("")),
 		}, nil
 	}
-	httprobe.Launch(client)
-	// assert.Equal(t, "test", result.GetId())
+	result := httprobe.Launch(client)
+	assert.Equal(t, "test", result.GetId())
+	assert.Equal(t, result.GetCode(), types.UP)
 }
