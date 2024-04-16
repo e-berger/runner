@@ -19,6 +19,8 @@ init:
 		docker-compose up -d;\
 	fi
 
+deploystart: deploy deployasia
+
 deploy: build
 	@aws --region $(region) --endpoint-url $(endpoint) lambda delete-function --function-name $(lambda_name)  2>/dev/null 1>/dev/null || true
 	@aws --region $(region) --endpoint-url=$(endpoint) events create-event-bus --name ${event_queue} --tags "Key"="test","Value"="test" 2>/dev/null 1>/dev/null || true
