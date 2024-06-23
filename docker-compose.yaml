@@ -1,10 +1,7 @@
-version: '3.8'
 services:
   localstack:
     image: localstack/localstack:latest
     environment:
-      - DEFAULT_REGION=us-east-1
-      - EDGE_PORT=4566
       - SERVICES=s3,lambda,logs,sqs,sns,dynamodb,apigateway,events,cloudwatch,kms,eventbridge
     ports:
       - '4566-4597:4566-4597'

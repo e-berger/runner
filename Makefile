@@ -58,7 +58,7 @@ deployasia: build
 localstack: build init deploy
 
 logs:
-	aws --endpoint-url=http://localhost:4566 logs tail "/aws/lambda/$(lambda_name)" --follow
+	aws --region $(region) --endpoint-url=http://localhost:4566 logs tail "/aws/lambda/$(lambda_name)" --follow
 
 sam-local:
 	sam build
@@ -69,13 +69,13 @@ build-Runner:
 	cp ./dist/sheepdog-runner_linux_amd64_v1/bootstrap $(ARTIFACTS_DIR)/.
 
 call:
-	aws --endpoint-url=$(endpoint) lambda invoke --function-name $(lambda_name) --cli-binary-format raw-in-base64-out --payload file://inputs.txt /dev/stdout
+	aws --region $(region) --endpoint-url=$(endpoint) lambda invoke --function-name $(lambda_name) --cli-binary-format raw-in-base64-out --payload file://inputs.txt /dev/stdout
 
 callhttp:
-	aws --endpoint-url=$(endpoint) lambda invoke --function-name $(lambda_name) --cli-binary-format raw-in-base64-out --payload file://inputs_http.txt /dev/stdout
+	aws --region $(region) --endpoint-url=$(endpoint) lambda invoke --function-name $(lambda_name) --cli-binary-format raw-in-base64-out --payload file://inputs_http.txt /dev/stdout
 
 purge:
-	awslocal --endpoint-url=$(endpoint) sqs purge-queue --queue-url http://localhost:4566/000000000000/${queue_name}
+	aws --region $(region) --endpoint-url=$(endpoint) sqs purge-queue --queue-url http://localhost:4566/000000000000/${queue_name}
 
 test:
 	go test -v ./...
